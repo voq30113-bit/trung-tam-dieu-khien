@@ -289,17 +289,21 @@ TQ.DATA = {
   claude: {
     url: 'https://claude.ai/new',
     // Bối cảnh gắn vào đầu mọi yêu cầu
+    // Tóm tắt từ huong-dan-van-phong-dau-tu-cung-thien-quoc.md (tệp chuẩn) và quy tắc đã chốt 12/11/2026
     context: [
-      'Bạn đang viết cho thương hiệu "Đầu tư cùng Thiên Quốc" của Thiên Quốc, môi giới chứng khoán tại TP.HCM, làm nội dung giáo dục tài chính cho người mới và nhà đầu tư cá nhân.',
-      'Viết bằng tiếng Việt, dễ hiểu, không thuật ngữ khó khi không cần. Xưng "mình"; gọi người đọc là "anh chị" (bài đăng, bản tin) hoặc "bạn" (video, website).',
-      'Quy tắc bắt buộc:',
-      '1. Không nói chắc giá sẽ tăng hay giảm, không hứa lợi nhuận.',
-      '2. Không khuyến nghị mua/bán mã cổ phiếu cụ thể.',
-      '3. Không nhắc tên công ty chứng khoán nào.',
-      '4. Không dùng các chữ "cam kết", "chắc chắn", "kèo", "x2 tài khoản".',
-      '5. Mọi con số (lãi suất, tỷ giá, chỉ số, phí, thuế) phải ghi nguồn và thời điểm; không chắc thì ghi [CẦN KIỂM TRA], không đoán.',
-      '6. Không hỏi hay nhắc tới thông tin cá nhân của khách.',
-      'Nội dung công khai kết thúc bằng lời mời: "Nhận bản tin trước phiên 7h miễn phí qua Zalo" và dòng "Thông tin tham khảo, không phải khuyến nghị đầu tư."'
+      'Bạn đang viết cho kênh "Đầu tư cùng Thiên Quốc". Người nói là Quốc, một môi giới chứng khoán trẻ, tốt nghiệp ngành đầu tư tài chính, chia sẻ kiến thức đầu tư bằng tiếng Việt. Mục tiêu: bán cả kiến thức lẫn cảm xúc, trung thực về số liệu, cân bằng về quan điểm.',
+      'XƯNG HÔ: người nói xưng "em" hoặc "em Quốc"; gọi người xem/người đọc là "anh chị" (có thể viết "AC", dùng xen kẽ).',
+      'GIỌNG: người trẻ hiểu nghề, nói chuyện ngang hàng, bình tĩnh, chừng mực. Không hô hào, không giật gân, không dạy đời, không an ủi, không bề trên (tránh kiểu "Anh chị cần phải hiểu rằng..."). Nêu sự việc và để người xem tự rút ra kết luận.',
+      'CHIỀU SÂU: mỗi con số đi kèm ý nghĩa và mốc thời gian; ưu tiên giải thích "vì sao"; luôn có phần cân bằng (mặt trái của tin tốt, rủi ro của cơ hội). Gắn kiến thức với cảm giác thật của nhà đầu tư; dùng so sánh đời thường khi phù hợp. Thuật ngữ chuyên môn phải giải thích.',
+      'QUY TẮC BẮT BUỘC:',
+      '1. Không nói chắc giá sẽ tăng hay giảm, không hứa lợi nhuận, không đưa giá mục tiêu.',
+      '2. Không khuyến nghị mua/bán. Khi nhắc mã cổ phiếu chỉ dùng "đáng chú ý", "đáng theo dõi", "nên thận trọng", kèm lý do dựa trên số liệu.',
+      '3. Không nhắc tên công ty chứng khoán nào (với tư cách nơi mở tài khoản, môi giới).',
+      '4. Không nhắc tên bất kỳ KOL hay kênh tài chính nào khác.',
+      '5. Không dùng các chữ "cam kết", "chắc chắn", "kèo", "x2 tài khoản".',
+      '6. Không bịa số liệu. Số không chắc thì ghi [CẦN KIỂM TRA]. Không cần ghi nguồn từng con số; cuối bài chỉ cần một dòng "Thông tin được tổng hợp từ nhiều nguồn."',
+      '7. Không nhắc thông tin cá nhân của khách hay kế hoạch cá nhân nhạy cảm của người nói.',
+      'Bài đăng công khai kết thúc bằng lời mời "Nhận bản tin trước phiên 7h miễn phí qua Zalo" và dòng "Thông tin tham khảo, không phải khuyến nghị đầu tư." Video kết thúc bằng dòng in nghiêng "Nội dung mang tính chia sẻ kiến thức, không phải khuyến nghị đầu tư."'
     ],
     randomTopics: [
       'Lãi suất điều hành ảnh hưởng tới thị trường chứng khoán thế nào',
@@ -357,16 +361,37 @@ TQ.DATA = {
           'Cuối cùng, gợi ý 3 ý có thể cắt thành bài đăng mạng xã hội.'
       },
       {
-        id: 'kich-ban', icon: '🎬', name: 'Kịch bản video ngắn',
-        desc: 'Kịch bản 45–60 giây cho TikTok, YouTube Shorts.',
+        id: 'kich-ban', icon: '🎬', name: 'Kịch bản video (TikTok, Reels, Shorts)',
+        desc: 'Lời thoại liền mạch theo hướng dẫn văn phong: phân tích, hướng dẫn, bình luận thị trường hoặc tâm sự.',
         fields: [
-          { id: 'topic', label: 'Chủ đề', type: 'text', placeholder: 'Ví dụ: 3 sai lầm khi mới mở tài khoản chứng khoán', random: true },
-          { id: 'length', label: 'Độ dài', type: 'select', options: ['30 giây', '45 giây', '60 giây', '90 giây'] },
-          { id: 'format', label: 'Hình thức', type: 'select', options: ['Nói trước camera', 'Lồng tiếng + chữ trên màn hình', 'Tổng kết phiên'] }
+          { id: 'topic', label: 'Chủ đề', type: 'text', placeholder: 'Ví dụ: vì sao VN-Index tăng mà tài khoản vẫn đỏ', random: true },
+          { id: 'kind', label: 'Dạng nội dung', type: 'select', options: ['Phân tích / bình luận (500–900 chữ, 3–5 phút)', 'Bình luận thị trường ngắn (300–450 chữ, khoảng 2 phút)', 'Hướng dẫn chi tiết (dài hơn, đề xuất chia tập)', 'Storytelling, tâm sự (300–450 chữ, khoảng 2 phút)'] },
+          { id: 'focus', label: 'Trọng tâm (không bắt buộc)', type: 'textarea', placeholder: 'Ý chính, phương pháp cần đi sâu, mã cần nhắc...' },
+          { id: 'docs', label: 'Tài liệu, số liệu có sẵn (không bắt buộc)', type: 'textarea', placeholder: 'Dán ghi chú, số liệu hoặc link. Có tài liệu thì ưu tiên dùng tài liệu.' },
+          { id: 'conclusion', label: 'Kết luận mong muốn (không bắt buộc)', type: 'text', placeholder: 'Yếu tố cần phân tích, mã đáng chú ý, nguyên tắc áp dụng...' },
+          { id: 'next', label: 'Dẫn sang tập sau (không bắt buộc)', type: 'text', placeholder: 'Chủ đề tập sau, nếu có' }
         ],
-        task: (v) => 'Viết kịch bản video ' + v.length + ' về: "' + v.topic + '". Hình thức: ' + v.format + '. Xưng "mình", gọi "bạn".\n' +
-          'Trình bày theo bảng 3 cột: Thời điểm | Lời nói | Chữ/hình trên màn hình. 3 giây đầu phải có câu móc. Kết video bằng lời mời nhận bản tin Zalo.\n' +
-          'Sau kịch bản: đề xuất 3 tiêu đề, 1 chú thích dưới 300 ký tự kèm hashtag.'
+        task: (v) => {
+          const story = /Storytelling/.test(v.kind);
+          return 'Viết lời thoại video cho kênh Đầu tư cùng Thiên Quốc.\n\n' +
+            'Chủ đề: ' + v.topic + '\nDạng nội dung: ' + v.kind + '\n' +
+            (v.focus ? 'Trọng tâm: ' + v.focus + '\n' : '') +
+            (v.docs ? 'Tài liệu (ưu tiên dùng):\n"""\n' + v.docs + '\n"""\n' : '') +
+            (v.conclusion ? 'Kết luận mong muốn: ' + v.conclusion + '\n' : '') +
+            (v.next ? 'Dẫn sang nội dung tiếp theo: ' + v.next + '\n' : '') +
+            '\nĐỊNH DẠNG:\n' +
+            '- Chỉ viết lời thoại liền mạch. Không viết phân cảnh, không ghi góc máy, không ghi chữ trên màn hình.\n' +
+            '- Đoạn văn ngắn, mỗi đoạn 2–4 câu, dễ đọc thành tiếng. Câu ngắn.\n' +
+            '- In đậm khoảng 1 câu cho mỗi 2–3 đoạn (câu kết luận, câu nghịch lý, câu đáng nhớ). Có thể để một câu đứng riêng một dòng để tạo khoảng dừng.\n' +
+            '- Hạn chế emoji, không ký hiệu trang trí. Gạch đầu dòng chỉ dùng cho checklist hoặc nguyên tắc ngắn.\n' +
+            (story
+              ? '\nCẤU TRÚC (storytelling): kể ở ngôi "em", chân thật, chậm rãi. Mở bằng một câu hỏi hoặc câu người khác hay nói với em. Dùng trải nghiệm thật của nghề môi giới; có một khoảnh khắc chuyển biến trong suy nghĩ; kết bằng một câu khẳng định khiêm tốn, không phô trương. Chi tiết nào không chắc là trải nghiệm thật thì đánh dấu [THAY BẰNG CHUYỆN THẬT].\n'
+              : '\nCẤU TRÚC:\n1. Hook 1–3 câu: nghịch lý, con số gây bất ngờ, thách thức niềm tin phổ biến, tình huống người xem đang trải qua, hoặc đối lập vai trò. Câu hỏi đặt ra ở hook bắt buộc được trả lời ở cuối bài.\n2. Bối cảnh: chuyện gì đã xảy ra, có mốc thời gian và con số.\n3. Bước ngoặt: nguyên nhân thật sự, thường khác điều người xem nghĩ.\n4. Đi sâu: cơ chế, nhân quả, hệ quả bậc hai. Đặt hai con số cạnh nhau rồi dừng lại giải thích.\n5. Phân hoá và ví dụ: ai thắng, ai thua, vì sao.\n6. Áp dụng: người xem nên nhìn yếu tố gì, tự hỏi câu gì, theo dõi chỉ số nào.\n7. Câu kết đáng nhớ, in đậm.\n') +
+            '8. CTA: một câu hỏi mời comment gắn với trải nghiệm của người xem' + (v.next ? ', dẫn sang tập sau' : '') + ', rồi "Follow Đầu tư cùng Thiên Quốc để hiểu thị trường theo cách sâu hơn một chút."\n' +
+            '9. Dòng miễn trừ in nghiêng: *Nội dung mang tính chia sẻ kiến thức, không phải khuyến nghị đầu tư.*\n' +
+            '\nKết hợp tài liệu với tìm kiếm web để cập nhật số liệu mới nhất; mỗi con số có mốc thời gian.\n' +
+            'Sau lời thoại, viết thêm (tách riêng, không đọc): 3 tiêu đề, 1 chú thích TikTok dưới 300 ký tự kèm 3–5 hashtag, danh sách các con số cần kiểm tra lại. Nếu nội dung vượt độ dài phù hợp, đề xuất cách cắt hoặc chia tập.';
+        }
       },
       {
         id: 'tra-loi', icon: '💬', name: 'Trả lời bình luận / tin nhắn',
@@ -376,7 +401,8 @@ TQ.DATA = {
           { id: 'where', label: 'Trả lời ở đâu', type: 'select', options: ['Bình luận công khai', 'Tin nhắn riêng'] }
         ],
         task: (v) => 'Soạn câu trả lời (' + v.where + ') cho câu hỏi sau của một người xem:\n"""\n' + v.question + '\n"""\n' +
-          'Nếu câu hỏi xin khuyến nghị mã cụ thể hoặc hỏi giá sẽ tăng/giảm: từ chối nhẹ nhàng, giải thích vì sao mình không khuyến nghị, rồi đưa kiến thức chung giúp họ tự đánh giá. ' +
+          'Nếu câu hỏi xin khuyến nghị mã cụ thể hoặc hỏi giá sẽ tăng/giảm: từ chối nhẹ nhàng, giải thích vì sao em không khuyến nghị, rồi đưa kiến thức chung giúp anh chị tự đánh giá. ' +
+          'Nếu là lời chỉ trích (ví dụ "lùa gà", "còn trẻ thì biết gì"): điềm tĩnh, thừa nhận phần có lý của người chỉ trích, trả lời bằng hành động; không đáp trả, không tự bào chữa. ' +
           'Dưới 80 chữ cho bình luận, dưới 150 chữ cho tin nhắn. Đưa 2 phương án để mình chọn.'
       },
       {

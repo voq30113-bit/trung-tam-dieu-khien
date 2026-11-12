@@ -13,6 +13,7 @@ Trang điều khiển riêng cho hệ thống nội dung và tìm khách. Chạy
 | Kết nối (`#/ket-noi/<kênh>`) | Chọn cách kết nối (tự chủ hoặc qua Claude/vidIQ), làm theo từng bước, nút mở trang đăng nhập chính thức, rồi xác nhận. |
 | Lịch tự động | Các việc Claude chạy theo giờ Việt Nam, đếm ngược, nút "Đã nhận" và link tìm email trong Gmail. |
 | Đăng bài | Soạn bài, tự rà 6 quy tắc nội dung, đếm ký tự từng nền tảng, một nút mở Threads / Facebook / TikTok / Zalo / YouTube để đăng, lưu bản nháp. |
+| Trợ lý Claude | Chọn mẫu (bài đăng, báo cáo phân tích có nút chủ đề ngẫu nhiên, kịch bản video, trả lời bình luận, yêu cầu tự do). Trang ghép yêu cầu kèm thương hiệu + 6 quy tắc, copy và mở Claude.ai bằng gói bạn đang dùng. Dán kết quả về để rà quy tắc và chuyển sang Đăng bài. Mẫu nằm trong `assets/data.js` (mục `claude`). |
 | Tìm khách | Chấm điểm khách (cùng thang điểm với Apps Script), tin nhắn soạn sẵn N0–N14, tính ngày follow-up, phễu tuần. Không lưu thông tin khách. |
 | Nhật ký | Mọi việc đã làm, lọc theo kênh, tải CSV. |
 | Cài đặt | Sao lưu / nạp lại dữ liệu, giao diện sáng tối. |

@@ -10,7 +10,7 @@
   const WD_LONG = ['Chủ nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
 
   /* ---------- Lưu trữ ---------- */
-  const blank = () => ({ channels: {}, tasks: {}, daily: {}, jobsSeen: {}, video: {}, drafts: [], compose: '', log: [], notes: {}, funnel: {}, theme: 'auto' });
+  const blank = () => ({ channels: {}, tasks: {}, daily: {}, jobsSeen: {}, video: {}, drafts: [], compose: '', claudeForm: null, claudeHistory: [], log: [], notes: {}, funnel: {}, theme: 'auto' });
   let S = load();
   function load() {
     try {
@@ -176,7 +176,7 @@
 
   /* ---------- Bố cục chung ---------- */
   const NAV = [
-    ['', 'Tổng quan'], ['lich', 'Lịch tự động'], ['dang-bai', 'Đăng bài'], ['tim-khach', 'Tìm khách'], ['nhat-ky', 'Nhật ký'], ['cai-dat', 'Cài đặt']
+    ['', 'Tổng quan'], ['lich', 'Lịch tự động'], ['dang-bai', 'Đăng bài'], ['claude', 'Trợ lý Claude'], ['tim-khach', 'Tìm khách'], ['nhat-ky', 'Nhật ký'], ['cai-dat', 'Cài đặt']
   ];
   function renderNav(route) {
     const pending = D.channels.filter((c) => needsAction(chState(c.id).status)).length;
@@ -408,7 +408,7 @@
     if (!t.trim()) return out;
     const banned = C.banned.filter((w) => low.includes(w.normalize('NFC')));
     if (banned.length) out.push({ k: 'bad', m: 'Có từ cấm: "' + banned.join('", "') + '" (quy tắc 1 và 4).' });
-    const predictions = ['sẽ tăng', 'sẽ giảm', 'sắp tăng', 'sắp giảm', 'chắc tăng', 'chắc giảm', 'bùng nổ', 'nhân đôi', 'tăng bằng lần', 'lợi nhuận', 'lãi '];
+    const predictions = ['sẽ tăng', 'sẽ giảm', 'sắp tăng', 'sắp giảm', 'chắc tăng', 'chắc giảm', 'bùng nổ', 'nhân đôi', 'tăng bằng lần', 'lợi nhuận cao', 'lợi nhuận hấp dẫn', 'lãi khủng', 'lãi đều', 'ăn chắc', 'về bờ'];
     const pr = predictions.filter((w) => low.includes(w));
     if (pr.length) out.push({ k: 'warn', m: 'Nên đọc lại câu có "' + pr.join('", "') + '": không nói chắc giá tăng giảm, không hứa lợi nhuận.' });
     const brokers = C.brokers.filter((b) => (/^[A-Z]+$/.test(b) ? new RegExp('(^|[^A-Za-z])' + b + '([^A-Za-z]|$)').test(t) : low.includes(b.toLowerCase())));
@@ -425,7 +425,7 @@
     const text = S.compose || '';
     const zalo = chState('zalo');
     return '<div class="pagehead"><div class="grow"><h1>Đăng bài</h1><p>Hệ thống đăng bài của riêng bạn: dán bài từ email 17h25 hoặc tự viết, trang rà quy tắc nội dung, rồi một nút mở đúng nơi đăng. Không cần công cụ trả phí.</p></div>' +
-      '<div class="btns"><a class="btn ext" href="' + gmailSearch('Nội dung tìm khách') + '" target="_blank" rel="noopener">Lấy bài 17h25 trong Gmail</a></div></div>' +
+      '<div class="btns"><a class="btn" href="#/claude">✍️ Nhờ Claude viết</a><a class="btn ext" href="' + gmailSearch('Nội dung tìm khách') + '" target="_blank" rel="noopener">Lấy bài 17h25 trong Gmail</a></div></div>' +
       '<div class="grid2"><div>' +
       '<div class="card" id="soan-bai"><div class="card-head"><h2>Soạn bài</h2><span class="right muted small" id="savestate">' + (UI.draftId ? 'Đang sửa bản nháp' : 'Bài mới') + '</span></div>' +
       '<textarea id="composer" placeholder="Dán hoặc viết bài ở đây...">' + esc(text) + '</textarea>' +
@@ -580,6 +580,103 @@
     }).join('');
   }
 
+  /* ---------- Trang: Trợ lý Claude ---------- */
+  const CL = D.claude;
+  const NO_SAVE = { 'tra-loi': true }; // không lưu nội dung có thể chứa thông tin người xem
+  function clState() {
+    S.claudeForm = S.claudeForm || { tpl: CL.templates[0].id, values: {} };
+    S.claudeHistory = S.claudeHistory || [];
+    UI.clValues = UI.clValues || {};
+    return S.claudeForm;
+  }
+  function clTpl() { const f = clState(); return CL.templates.find((t) => t.id === f.tpl) || CL.templates[0]; }
+  function clValues(t) {
+    const f = clState();
+    const saved = NO_SAVE[t.id] ? (UI.clValues[t.id] || {}) : (f.values[t.id] || {});
+    const v = {};
+    for (const fld of t.fields) v[fld.id] = saved[fld.id] != null ? saved[fld.id] : (fld.type === 'select' ? fld.options[0] : '');
+    return v;
+  }
+  function clSetValue(t, id, val) {
+    const f = clState();
+    const bag = NO_SAVE[t.id] ? (UI.clValues[t.id] = UI.clValues[t.id] || {}) : (f.values[t.id] = f.values[t.id] || {});
+    bag[id] = val;
+    if (!NO_SAVE[t.id]) save();
+  }
+  function clMissing(t, v) {
+    return t.fields.filter((f) => f.type !== 'select' && !/không bắt buộc/.test(f.label) && !String(v[f.id] || '').trim());
+  }
+  function clPrompt(t, v) {
+    const d = vn();
+    const today = WD_LONG[d.getUTCDay()] + ', ' + pad(d.getUTCDate()) + '/' + pad(d.getUTCMonth() + 1) + '/' + d.getUTCFullYear();
+    return CL.context.join('\n') + '\nHôm nay là ' + today + ' (giờ Việt Nam).\n\nYÊU CẦU:\n' + t.task(v);
+  }
+  function pageClaude() {
+    const t = clTpl(), v = clValues(t);
+    const field = (f) => {
+      const val = v[f.id];
+      const attrs = ' data-cf="' + f.id + '" id="cf-' + f.id + '"';
+      let input;
+      if (f.type === 'select') input = '<select' + attrs + '>' + f.options.map((o) => '<option' + (o === val ? ' selected' : '') + '>' + esc(o) + '</option>').join('') + '</select>';
+      else if (f.type === 'textarea') input = '<textarea' + attrs + ' style="min-height:110px" placeholder="' + esc(f.placeholder || '') + '">' + esc(val) + '</textarea>';
+      else input = '<div class="inline"><input type="text"' + attrs + ' value="' + esc(val) + '" placeholder="' + esc(f.placeholder || '') + '" autocomplete="off">' +
+        (f.random ? '<button class="btn" type="button" data-act="cl-random" data-id="' + f.id + '" title="Chọn chủ đề ngẫu nhiên">🎲 Ngẫu nhiên</button>' : '') + '</div>';
+      return '<label class="field"><span>' + esc(f.label) + '</span>' + input + '</label>';
+    };
+    return '<div class="pagehead"><div class="grow"><h1>Trợ lý Claude</h1><p>Chọn mẫu, điền chủ đề. Trang ghép sẵn yêu cầu (đã kèm thương hiệu và 6 quy tắc nội dung) rồi mở Claude.ai bằng gói bạn đang dùng, không tốn thêm phí.</p></div>' +
+      '<div class="btns"><a class="btn" href="#/dang-bai">Mục Đăng bài</a></div></div>' +
+      '<div class="methods" role="group" aria-label="Mẫu yêu cầu">' + CL.templates.map((x) =>
+        '<button class="method" type="button" data-act="cl-tpl" data-id="' + x.id + '" aria-pressed="' + (x.id === t.id) + '"><b>' + x.icon + ' ' + esc(x.name) + '</b><span class="d">' + esc(x.desc) + '</span></button>').join('') + '</div>' +
+      '<div class="grid2"><div>' +
+      '<div class="card" id="cl-form"><h2>' + t.icon + ' ' + esc(t.name) + '</h2><form data-form="claude" novalidate>' + t.fields.map(field).join('') + '</form>' +
+      (NO_SAVE[t.id] ? '<p class="note warn">Bỏ tên, số điện thoại, thông tin cá nhân của người hỏi trước khi dán. Mẫu này không lưu lại nội dung.</p>' : '') +
+      '<div class="btns"><button class="btn primary" type="button" data-act="cl-open">Mở Claude với yêu cầu này ↗</button><button class="btn" type="button" data-act="cl-copy">Chỉ copy yêu cầu</button></div>' +
+      '<p class="muted small" style="margin:10px 0 0">Bấm nút: trang copy yêu cầu và mở Claude.ai ở tab mới. Nếu ô chat chưa có chữ, bấm <b>Ctrl+V</b> rồi Enter.</p>' +
+      '<details style="margin-top:12px"><summary class="muted small">Xem yêu cầu sẽ gửi</summary><pre class="msg" id="cl-preview" style="margin-top:8px"></pre></details></div>' +
+      '<div class="card" id="cl-ket-qua"><h2>Dán kết quả từ Claude</h2><p class="muted small">Copy câu trả lời của Claude, dán vào đây để rà quy tắc rồi chuyển sang đăng.</p>' +
+      '<textarea id="cl-out" placeholder="Dán kết quả ở đây..."></textarea>' +
+      '<h3 style="margin:12px 0 8px">Rà quy tắc</h3><ul class="issues" id="cl-issues"><li class="warn">Chưa có nội dung.</li></ul>' +
+      '<div class="btns"><button class="btn primary" type="button" data-act="cl-to-compose">Chuyển sang Đăng bài</button><button class="btn" type="button" data-act="cl-save-draft">Lưu vào bản nháp</button></div></div>' +
+      '</div><div>' +
+      clHistCard() +
+      '<div class="card" id="cl-meo"><h2>Mẹo</h2><ul class="list">' +
+      '<li><span class="dot info"></span><div class="body">Báo cáo phân tích cần số liệu mới: trong Claude.ai bật <b>Tìm kiếm web</b> (biểu tượng ⚙ hoặc + cạnh ô chat) trước khi gửi.</div></li>' +
+      '<li><span class="dot info"></span><div class="body">Muốn sửa: trả lời ngay trong Claude, ví dụ "ngắn lại một nửa", "giọng thân mật hơn".</div></li>' +
+      '<li><span class="dot warn"></span><div class="body">Claude có thể nhầm số liệu. Kiểm tra lại mọi con số có [CẦN KIỂM TRA] hoặc không có nguồn trước khi đăng.</div></li>' +
+      '</ul></div></div></div>';
+  }
+  function clHistCard() {
+    const hist = S.claudeHistory.slice(0, 12);
+    return '<div class="card" id="cl-gan-day"><div class="card-head"><h2>Đã gửi gần đây</h2><span class="right muted small">' + S.claudeHistory.length + '</span></div>' +
+      (hist.length ? '<ul class="list">' + hist.map((h, i) => {
+        const tt = CL.templates.find((x) => x.id === h.tpl) || { icon: '•', name: h.tpl };
+        return '<li><time>' + fmtFull(h.at) + '</time><div class="body">' + tt.icon + ' ' + esc(h.title) + '<div class="tag">' + esc(tt.name) + '</div></div><button class="btn small" data-act="cl-hist" data-id="' + i + '">Dùng lại</button></li>';
+      }).join('') + '</ul>' : '<p class="empty">Chưa gửi yêu cầu nào.</p>') + '</div>';
+  }
+  function clUpdate() {
+    const pv = $('#cl-preview');
+    if (pv) { const t = clTpl(); pv.textContent = clPrompt(t, clValues(t)); }
+  }
+  function clOutUpdate() {
+    const ta = $('#cl-out'), box = $('#cl-issues');
+    if (!ta || !box) return;
+    const issues = complianceCheck(ta.value);
+    box.innerHTML = issues.length ? issues.map((i) => '<li class="' + i.k + '">' + esc(i.m) + '</li>').join('') : '<li class="warn">Chưa có nội dung.</li>';
+  }
+  function clReady() {
+    const t = clTpl(), v = clValues(t), miss = clMissing(t, v);
+    if (miss.length) { toast('Điền "' + miss[0].label + '" trước'); const el = $('#cf-' + miss[0].id); if (el) el.focus(); return null; }
+    return { t, v, prompt: clPrompt(t, v) };
+  }
+  function clRecord(r) {
+    const title = String(r.v.topic || r.v.ask || r.t.name).replace(/\s+/g, ' ').slice(0, 80);
+    S.claudeHistory.unshift({ at: new Date().toISOString(), tpl: r.t.id, title: NO_SAVE[r.t.id] ? r.t.name : title, values: NO_SAVE[r.t.id] ? {} : Object.assign({}, r.v) });
+    if (S.claudeHistory.length > 50) S.claudeHistory.length = 50;
+    const card = $('#cl-gan-day'); if (card) card.outerHTML = clHistCard();
+    addLog('', 'Nhờ Claude: ' + r.t.name + (NO_SAVE[r.t.id] ? '' : ' · ' + title), 'info');
+    save();
+  }
+
   /* ---------- Trang: Nhật ký ---------- */
   function pageLog(filter) {
     const rows = filter ? S.log.filter((r) => r.ch === filter) : S.log;
@@ -624,15 +721,16 @@
     if (location.hash && !location.hash.startsWith('#/')) history.replaceState(null, '', '#/');
     const { route, arg } = parse();
     renderNav(route);
-    const pages = { '': pageHome, kenh: () => pageChannel(arg), 'ket-noi': () => pageConnect(arg), lich: pageSchedule, 'dang-bai': () => pageCompose(arg), 'tim-khach': pageLeads, 'nhat-ky': () => pageLog(arg), 'cai-dat': pageSettings };
+    const pages = { '': pageHome, kenh: () => pageChannel(arg), 'ket-noi': () => pageConnect(arg), lich: pageSchedule, 'dang-bai': () => pageCompose(arg), claude: pageClaude, 'tim-khach': pageLeads, 'nhat-ky': () => pageLog(arg), 'cai-dat': pageSettings };
     const fn = pages[route] || pageNotFound;
     const html = fn();
     if (html === '' && route === 'ket-noi') return;
     $('#main').innerHTML = html;
-    const titles = { '': 'Tổng quan', kenh: (chById(arg) || {}).name, 'ket-noi': 'Kết nối ' + ((chById(arg) || {}).name || ''), lich: 'Lịch tự động', 'dang-bai': 'Đăng bài', 'tim-khach': 'Tìm khách', 'nhat-ky': 'Nhật ký', 'cai-dat': 'Cài đặt' };
+    const titles = { '': 'Tổng quan', kenh: (chById(arg) || {}).name, 'ket-noi': 'Kết nối ' + ((chById(arg) || {}).name || ''), lich: 'Lịch tự động', 'dang-bai': 'Đăng bài', claude: 'Trợ lý Claude', 'tim-khach': 'Tìm khách', 'nhat-ky': 'Nhật ký', 'cai-dat': 'Cài đặt' };
     document.title = (titles[route] || 'Trung tâm điều khiển') + ' · Thiên Quốc';
     if (route === 'ket-noi') { const f = $('form[data-form="connect"]'); if (f) connectPreview(f); }
     if (route === 'dang-bai') composeUpdate();
+    if (route === 'claude') { clUpdate(); clOutUpdate(); }
     if (route === 'tim-khach') { leadUpdate(); funnelUpdate(); mocUpdate(); }
     window.scrollTo(0, 0);
   }
@@ -701,6 +799,34 @@
       save(); $('#drafts').innerHTML = draftsHtml(); toast('Đã ghi: đăng lên ' + p.name);
     }
     else if (act === 'copy-msg') copy($('#mtext').textContent);
+    else if (act === 'cl-tpl') { clState().tpl = id; save(); rerender(); }
+    else if (act === 'cl-random') {
+      const inp = $('#cf-' + id); if (!inp) return;
+      const pool = CL.randomTopics.filter((x) => x !== inp.value);
+      inp.value = pool[Math.floor(Math.random() * pool.length)];
+      clSetValue(clTpl(), id, inp.value); clUpdate();
+    }
+    else if (act === 'cl-copy') { const r = clReady(); if (r) { copy(r.prompt); clRecord(r); } }
+    else if (act === 'cl-open') {
+      const r = clReady(); if (!r) return;
+      copy(r.prompt);
+      const url = CL.url + '?q=' + encodeURIComponent(r.prompt);
+      window.open(url.length > 7000 ? CL.url : url, '_blank', 'noopener');
+      clRecord(r);
+      toast(url.length > 7000 ? 'Yêu cầu dài: đã copy, bấm Ctrl+V trong Claude' : 'Đã copy yêu cầu. Ô chat trống thì bấm Ctrl+V');
+    }
+    else if (act === 'cl-hist') {
+      const h = S.claudeHistory[+id]; if (!h) return;
+      const f = clState(); f.tpl = h.tpl;
+      if (h.values && Object.keys(h.values).length) f.values[h.tpl] = Object.assign({}, h.values);
+      save(); render(); toast('Đã nạp lại yêu cầu');
+    }
+    else if (act === 'cl-to-compose' || act === 'cl-save-draft') {
+      const text = ($('#cl-out') || {}).value || '';
+      if (!text.trim()) { toast('Dán kết quả từ Claude trước'); return; }
+      if (act === 'cl-to-compose') { UI.draftId = null; S.compose = text; save(); location.hash = '#/dang-bai'; }
+      else { S.drafts.unshift({ id: uid(), text, created: new Date().toISOString(), posted: {} }); save(); toast('Đã lưu vào bản nháp'); }
+    }
     else if (act === 'export') {
       const blob = new Blob([JSON.stringify(Object.assign({ app: 'tq-dieu-khien', exported: new Date().toISOString() }, S), null, 2)], { type: 'application/json' });
       const a = document.createElement('a');
@@ -766,6 +892,8 @@
     else if (t.dataset.notes) { clearTimeout(notesTimer); notesTimer = setTimeout(() => { S.notes[t.dataset.notes] = t.value; save(); }, 400); }
     else if (t.dataset.funnel) { const wk = weekKey(); S.funnel[wk] = S.funnel[wk] || {}; S.funnel[wk][t.dataset.funnel] = Math.max(0, parseInt(t.value, 10) || 0); save(); funnelUpdate(); }
     else if (t.id === 'mname' || t.id === 'mworry') msgUpdate();
+    else if (t.dataset.cf) { clSetValue(clTpl(), t.dataset.cf, t.value); clUpdate(); }
+    else if (t.id === 'cl-out') clOutUpdate();
     else if (t.form && t.form.dataset.form === 'connect') connectPreview(t.form);
   });
 

@@ -285,6 +285,111 @@ TQ.DATA = {
     cta: 'Nhận bản tin trước phiên 7h miễn phí qua Zalo'
   },
 
+  // Trợ lý Claude: mẫu yêu cầu. Trang ghép bối cảnh thương hiệu + quy tắc + mẫu, rồi mở Claude.ai.
+  claude: {
+    url: 'https://claude.ai/new',
+    // Bối cảnh gắn vào đầu mọi yêu cầu
+    context: [
+      'Bạn đang viết cho thương hiệu "Đầu tư cùng Thiên Quốc" của Thiên Quốc, môi giới chứng khoán tại TP.HCM, làm nội dung giáo dục tài chính cho người mới và nhà đầu tư cá nhân.',
+      'Viết bằng tiếng Việt, dễ hiểu, không thuật ngữ khó khi không cần. Xưng "mình"; gọi người đọc là "anh chị" (bài đăng, bản tin) hoặc "bạn" (video, website).',
+      'Quy tắc bắt buộc:',
+      '1. Không nói chắc giá sẽ tăng hay giảm, không hứa lợi nhuận.',
+      '2. Không khuyến nghị mua/bán mã cổ phiếu cụ thể.',
+      '3. Không nhắc tên công ty chứng khoán nào.',
+      '4. Không dùng các chữ "cam kết", "chắc chắn", "kèo", "x2 tài khoản".',
+      '5. Mọi con số (lãi suất, tỷ giá, chỉ số, phí, thuế) phải ghi nguồn và thời điểm; không chắc thì ghi [CẦN KIỂM TRA], không đoán.',
+      '6. Không hỏi hay nhắc tới thông tin cá nhân của khách.',
+      'Nội dung công khai kết thúc bằng lời mời: "Nhận bản tin trước phiên 7h miễn phí qua Zalo" và dòng "Thông tin tham khảo, không phải khuyến nghị đầu tư."'
+    ],
+    randomTopics: [
+      'Lãi suất điều hành ảnh hưởng tới thị trường chứng khoán thế nào',
+      'Tỷ giá USD/VND và nhóm doanh nghiệp xuất nhập khẩu',
+      'P/E là gì và vì sao P/E thấp chưa chắc là rẻ',
+      'Dòng tiền khối ngoại: đọc thế nào cho đúng',
+      'Chu kỳ ngành ngân hàng: các chỉ số cần theo dõi (NIM, nợ xấu, tăng trưởng tín dụng)',
+      'Giá dầu thế giới tác động tới kinh tế Việt Nam ra sao',
+      'Nâng hạng thị trường: ý nghĩa với nhà đầu tư cá nhân',
+      'Lạm phát (CPI) và quyết định phân bổ tài sản',
+      'Đầu tư định kỳ (DCA) so với mua một lần',
+      'Đọc báo cáo kết quả kinh doanh quý trong 10 phút',
+      'Margin: cơ chế, rủi ro và cách tính tỷ lệ ký quỹ',
+      'Chứng chỉ quỹ ETF dành cho người mới',
+      'Trái phiếu doanh nghiệp: lợi suất và rủi ro',
+      'Cổ tức tiền mặt và cổ tức cổ phiếu khác nhau thế nào',
+      'Chính sách tài khoá, đầu tư công và nhóm ngành liên quan',
+      'Kinh tế Mỹ, Fed và tác động tới thị trường mới nổi',
+      'Quản trị rủi ro: tỷ trọng, cắt lỗ và đa dạng hoá danh mục',
+      'Tâm lý đám đông (FOMO) và sai lầm thường gặp của người mới',
+      'Chỉ số PMI và sức khoẻ ngành sản xuất',
+      'Bất động sản và tín dụng: mối liên hệ cần biết'
+    ],
+    templates: [
+      {
+        id: 'bai-dang', icon: '✍️', name: 'Viết bài đăng',
+        desc: 'Bài Facebook, chú thích TikTok, bài Threads hoặc tin Zalo.',
+        fields: [
+          { id: 'platform', label: 'Nền tảng', type: 'select', options: ['Facebook Page', 'TikTok (chú thích video)', 'Threads (2 bài ngắn)', 'Zalo cộng đồng'] },
+          { id: 'topic', label: 'Chủ đề', type: 'text', placeholder: 'Ví dụ: vì sao người mới nên có quỹ dự phòng trước khi đầu tư', random: true },
+          { id: 'style', label: 'Giọng văn', type: 'select', options: ['Giáo dục, rõ ràng', 'Kể chuyện gần gũi', 'Hỏi đáp', 'Danh sách mẹo'] },
+          { id: 'note', label: 'Ý muốn thêm (không bắt buộc)', type: 'textarea', placeholder: 'Dán ý chính, số liệu có nguồn, hoặc bài 17h25 để Claude viết lại...' }
+        ],
+        task: (v) => 'Viết một bài cho ' + v.platform + ' về chủ đề: "' + v.topic + '". Giọng văn: ' + v.style + '.\n' +
+          ({ 'Facebook Page': 'Độ dài 150–250 chữ, mở đầu bằng một câu gây tò mò, chia đoạn ngắn, tối đa 3 emoji, 3–5 hashtag cuối bài.',
+             'TikTok (chú thích video)': 'Chú thích dưới 300 ký tự, một câu móc đầu, 3–5 hashtag. Kèm thêm 3 ý chính để mình nói trong video 45 giây.',
+             'Threads (2 bài ngắn)': 'Viết 2 bài riêng biệt, mỗi bài dưới 450 ký tự, đánh số Bài 1 / Bài 2. Mỗi bài tự đủ ý.',
+             'Zalo cộng đồng': 'Tin nhắn 120–200 chữ, văn bản thuần, không hashtag, gạch đầu dòng bằng dấu "-".' }[v.platform] || '') +
+          (v.note ? '\nTư liệu/ý muốn thêm:\n' + v.note : '') +
+          '\nTrả về đúng nội dung để copy đăng, không giải thích thêm. Sau đó, ở cuối, liệt kê riêng các con số cần kiểm tra lại (nếu có).'
+      },
+      {
+        id: 'bao-cao', icon: '📊', name: 'Báo cáo phân tích',
+        desc: 'Một báo cáo ngắn về vĩ mô, ngành hoặc một khái niệm. Có nút chọn chủ đề ngẫu nhiên.',
+        fields: [
+          { id: 'topic', label: 'Chủ đề', type: 'text', placeholder: 'Bấm 🎲 để chọn chủ đề ngẫu nhiên', random: true },
+          { id: 'depth', label: 'Độ dài', type: 'select', options: ['Ngắn (khoảng 1 trang)', 'Vừa (2–3 trang)', 'Chi tiết (có bảng số liệu)'] },
+          { id: 'reader', label: 'Người đọc', type: 'select', options: ['Người mới bắt đầu', 'Nhà đầu tư đã có kinh nghiệm', 'Dùng làm tư liệu cho mình'] },
+          { id: 'note', label: 'Góc nhìn / câu hỏi muốn trả lời (không bắt buộc)', type: 'textarea', placeholder: 'Ví dụ: tập trung vào tác động tới nhóm ngân hàng trong 6 tháng tới' }
+        ],
+        task: (v) => 'Viết một báo cáo phân tích về: "' + v.topic + '". Độ dài: ' + v.depth + '. Người đọc: ' + v.reader + '.\n' +
+          'Hãy tìm kiếm web để lấy số liệu mới nhất có thể, ghi rõ nguồn và ngày cho từng con số. Không tìm được thì ghi [CẦN KIỂM TRA].\n' +
+          'Cấu trúc: 1) Tóm tắt 3 ý chính. 2) Bối cảnh và số liệu. 3) Các yếu tố cần theo dõi (kịch bản tích cực / tiêu cực, không dự đoán chắc chắn). 4) Ý nghĩa với nhà đầu tư cá nhân (giáo dục, không khuyến nghị mã). 5) Nguồn tham khảo.\n' +
+          (v.note ? 'Góc nhìn mong muốn: ' + v.note + '\n' : '') +
+          'Cuối cùng, gợi ý 3 ý có thể cắt thành bài đăng mạng xã hội.'
+      },
+      {
+        id: 'kich-ban', icon: '🎬', name: 'Kịch bản video ngắn',
+        desc: 'Kịch bản 45–60 giây cho TikTok, YouTube Shorts.',
+        fields: [
+          { id: 'topic', label: 'Chủ đề', type: 'text', placeholder: 'Ví dụ: 3 sai lầm khi mới mở tài khoản chứng khoán', random: true },
+          { id: 'length', label: 'Độ dài', type: 'select', options: ['30 giây', '45 giây', '60 giây', '90 giây'] },
+          { id: 'format', label: 'Hình thức', type: 'select', options: ['Nói trước camera', 'Lồng tiếng + chữ trên màn hình', 'Tổng kết phiên'] }
+        ],
+        task: (v) => 'Viết kịch bản video ' + v.length + ' về: "' + v.topic + '". Hình thức: ' + v.format + '. Xưng "mình", gọi "bạn".\n' +
+          'Trình bày theo bảng 3 cột: Thời điểm | Lời nói | Chữ/hình trên màn hình. 3 giây đầu phải có câu móc. Kết video bằng lời mời nhận bản tin Zalo.\n' +
+          'Sau kịch bản: đề xuất 3 tiêu đề, 1 chú thích dưới 300 ký tự kèm hashtag.'
+      },
+      {
+        id: 'tra-loi', icon: '💬', name: 'Trả lời bình luận / tin nhắn',
+        desc: 'Dán câu hỏi của người xem, Claude soạn câu trả lời đúng quy tắc.',
+        fields: [
+          { id: 'question', label: 'Câu hỏi / bình luận (bỏ tên, số điện thoại trước khi dán)', type: 'textarea', placeholder: 'Ví dụ: Anh ơi mã này giờ vào được chưa ạ?' },
+          { id: 'where', label: 'Trả lời ở đâu', type: 'select', options: ['Bình luận công khai', 'Tin nhắn riêng'] }
+        ],
+        task: (v) => 'Soạn câu trả lời (' + v.where + ') cho câu hỏi sau của một người xem:\n"""\n' + v.question + '\n"""\n' +
+          'Nếu câu hỏi xin khuyến nghị mã cụ thể hoặc hỏi giá sẽ tăng/giảm: từ chối nhẹ nhàng, giải thích vì sao mình không khuyến nghị, rồi đưa kiến thức chung giúp họ tự đánh giá. ' +
+          'Dưới 80 chữ cho bình luận, dưới 150 chữ cho tin nhắn. Đưa 2 phương án để mình chọn.'
+      },
+      {
+        id: 'tu-do', icon: '✨', name: 'Yêu cầu tự do',
+        desc: 'Gõ bất cứ yêu cầu nào, trang tự gắn bối cảnh thương hiệu và quy tắc.',
+        fields: [
+          { id: 'ask', label: 'Bạn muốn Claude làm gì?', type: 'textarea', placeholder: 'Ví dụ: Lên lịch nội dung 2 tuần cho TikTok, mỗi ngày một chủ đề, xen kẽ kiến thức và tổng kết phiên' }
+        ],
+        task: (v) => v.ask
+      }
+    ]
+  },
+
   // Giới hạn ký tự từng nền tảng
   limits: { threads: 500, tiktok: 2200, facebook: 63206, zalo: 4000, youtube: 5000 }
 };

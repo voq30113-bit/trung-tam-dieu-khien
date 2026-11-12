@@ -69,19 +69,18 @@ TQ.DATA = {
       tasks: ['Kiểm tra bài 7h45 đã lên', 'Kiểm tra bài 17h45 đã lên', 'Kiểm tra bài 21h45 đã lên']
     },
     {
-      id: 'video', name: 'Video tuần', icon: '🎬', group: 'auto', workflow: true,
-      desc: 'Thứ Năm có kịch bản, Thứ Bảy thu âm, Claude Code dựng video và Shorts, rồi đăng.',
+      id: 'video', name: 'Video dài', icon: '🎬', group: 'auto', workflow: true,
+      desc: '3 video dài mỗi tuần (T3 kiến thức nền, T5 câu hỏi người xem, CN nhìn lại tuần): kịch bản về 6h30 sáng, thu âm, dựng, đăng 19h.',
       seed: { status: 'auto', method: 'claude-code' },
       links: [
         { label: 'Tìm kịch bản trong Gmail', url: 'https://mail.google.com/mail/u/0/#search/subject%3A%22K%E1%BB%8Bch+b%E1%BA%A3n+video+tu%E1%BA%A7n%22' },
         { label: 'YouTube Studio', url: 'https://studio.youtube.com/' }
       ],
       steps: [
-        { id: 'kichban', text: 'Nhận kịch bản (Thứ Năm 19h47)' },
-        { id: 'thuam', text: 'Thu âm giọng đọc (Thứ Bảy)' },
-        { id: 'dung', text: 'Claude Code dựng video + Shorts (Prompt 6)' },
-        { id: 'youtube', text: 'Đăng video lên YouTube' },
-        { id: 'shorts', text: 'Đăng Shorts lên TikTok và Facebook' }
+        { id: 'v1', text: 'Video Thứ Ba: kịch bản → thu âm → dựng → đăng 19h' },
+        { id: 'v2', text: 'Video Thứ Năm: kịch bản → thu âm → dựng → đăng 19h' },
+        { id: 'v3', text: 'Video Chủ nhật: kịch bản → thu âm → dựng → đăng 19h' },
+        { id: 'shorts', text: 'Đăng 2–3 Shorts cắt từ video dài (T7–CN)' }
       ]
     },
     {
@@ -261,7 +260,7 @@ TQ.DATA = {
     { id: 'nhan-dinh', name: 'Nhận định trước phiên', channel: 'email', days: [1, 2, 3, 4, 5], times: ['07:00'], subject: 'Nhận định trước phiên' },
     { id: 'tong-ket', name: 'Tổng kết phiên', channel: 'email', days: [1, 2, 3, 4, 5], times: ['16:30'], subject: 'Tổng kết phiên' },
     { id: 'tim-khach', name: 'Nội dung tìm khách (FB · TikTok · Threads)', channel: 'email', days: [1, 2, 3, 4, 5], times: ['17:25'], subject: 'Nội dung tìm khách' },
-    { id: 'kich-ban', name: 'Kịch bản video tuần', channel: 'video', days: [4], times: ['19:47'], subject: 'Kịch bản video tuần' },
+    { id: 'kich-ban', name: 'Kịch bản video dài', channel: 'video', days: [0, 2, 4], times: ['06:30'], subject: 'Kịch bản video tuần' },
     { id: 'vi-mo', name: 'Báo cáo vĩ mô tuần', channel: 'email', days: [0], times: ['20:00'], subject: 'Báo cáo vĩ mô' },
     { id: 'web', name: 'Đăng bài lên website', channel: 'website', days: [0, 1, 2, 3, 4, 5, 6], times: ['07:45', '17:45', '21:45'], subject: 'Đã đăng website' }
   ],
@@ -273,7 +272,7 @@ TQ.DATA = {
     { id: 'tiktok-16h', time: '16:45', text: 'Quay và đăng video tổng kết phiên lên TikTok', channel: 'tiktok', days: [1, 2, 3, 4, 5], go: '#/dang-bai' },
     { id: 'fb-17h', time: '17:30', text: 'Đăng bài tìm khách lên Facebook Page', channel: 'facebook', days: [1, 2, 3, 4, 5], go: '#/dang-bai' },
     { id: 'threads-17h', time: '17:30', text: 'Đăng 2 bài Threads', channel: 'threads', days: [1, 2, 3, 4, 5], go: '#/dang-bai' },
-    { id: 'thuam-t7', time: '09:00', text: 'Thu âm giọng đọc video tuần', channel: 'video', days: [6], go: '#/kenh/video' }
+    { id: 'thuam-video', time: '08:00', text: 'Đọc kịch bản sáng nay, thu âm, dựng video dài (đăng 19h)', channel: 'video', days: [0, 2, 4], go: '#/kenh/video' }
   ],
 
   // Quy tắc nội dung (bản rút gọn để rà bài trước khi đăng)

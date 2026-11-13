@@ -834,7 +834,7 @@
 
   /* ---------- Trang: Trợ lý Claude ---------- */
   const CL = D.claude;
-  const NO_SAVE = { 'tra-loi': true }; // không lưu nội dung có thể chứa thông tin người xem
+  const NO_SAVE = { 'tra-loi': true, 'trao-doi-20': true }; // không lưu nội dung có thể chứa thông tin người xem
   function clState() {
     S.claudeForm = S.claudeForm || { tpl: CL.templates[0].id, values: {} };
     S.claudeHistory = S.claudeHistory || [];

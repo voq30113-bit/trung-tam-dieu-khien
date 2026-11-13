@@ -480,6 +480,29 @@ TQ.DATA = {
           'Dưới 80 chữ cho bình luận, dưới 150 chữ cho tin nhắn. Đưa 2 phương án để mình chọn.'
       },
       {
+        id: 'ke-hoach-tuan', icon: '🗓️', name: 'Kế hoạch nội dung tuần theo phễu',
+        desc: 'Một tuần nội dung chia theo ba việc: thu hút người mới, nuôi dưỡng người đã theo dõi, mời đăng ký.',
+        fields: [
+          { id: 'focus', label: 'Chuyện đang nóng tuần này (không bắt buộc)', type: 'textarea', placeholder: 'Dán vài chủ đề từ email "Chủ đề nổi bật", hoặc để trống' },
+          { id: 'funnel', label: 'Số phễu tuần trước (không bắt buộc)', type: 'text', placeholder: 'Ví dụ: 9 đăng ký, nhắn 6, trả lời 3, hẹn 1, mở 0; nhiều nhất từ TikTok' },
+          { id: 'weak', label: 'Khâu muốn cải thiện', type: 'select', options: ['Chưa biết, nhờ Claude chỉ ra', 'Ít người xem', 'Có người xem nhưng ít đăng ký', 'Có đăng ký nhưng ít người trả lời tin nhắn', 'Có trò chuyện nhưng ít người mở tài khoản'] }
+        ],
+        task: (v) => 'Lập kế hoạch nội dung 7 ngày cho kênh Đầu tư cùng Thiên Quốc. Mục tiêu của kênh: đưa người xem đi theo đường thấy nội dung → theo dõi → đăng ký nhận bản tin 7h qua Zalo → trò chuyện → buổi trao đổi danh mục 20 phút.\n' +
+          (v.focus ? 'Chuyện đang nóng:\n' + v.focus + '\n' : '') + (v.funnel ? 'Số phễu tuần trước: ' + v.funnel + '\n' : '') + 'Khâu muốn cải thiện: ' + v.weak + '\n\n' +
+          'Lịch cố định: Facebook 7h30 (nhận định), 18h (tổng kết), 20h (kiến thức) T2–T6; Threads 12h, 18h, 20h30; TikTok video tổng kết sau 16h45 T2–T6 và Shorts cuối tuần; YouTube video dài 19h T3, T5, CN.\n' +
+          'Trả về một bảng theo ngày. Mỗi dòng: kênh, giờ, chủ đề, câu mở bài, và nhãn Thu hút / Nuôi dưỡng / Chuyển đổi. Cả tuần tối đa 2 bài Chuyển đổi. Sau bảng, nêu đúng một chỗ nghẽn lớn nhất của phễu và 3 việc cụ thể để gỡ trong tuần này.'
+      },
+      {
+        id: 'trao-doi-20', icon: '🤝', name: 'Chuẩn bị buổi trao đổi 20 phút',
+        desc: 'Dàn ý, câu hỏi mở và điều không được nói cho một buổi trao đổi danh mục. Không nhập tên hay số điện thoại của khách.',
+        fields: [
+          { id: 'case', label: 'Tình huống của khách (không ghi tên, số điện thoại)', type: 'textarea', placeholder: 'Ví dụ: 2 năm kinh nghiệm, vốn khoảng 500 triệu, đang giữ 6 mã, lỗ 15%, có dùng vay ký quỹ, lo nhất là không biết nên giữ hay bán' },
+          { id: 'goal', label: 'Sau buổi này mình muốn đạt gì', type: 'select', options: ['Khách hiểu rõ danh mục của họ hơn', 'Hẹn được buổi thứ hai', 'Khách đồng ý để mình theo sát danh mục', 'Hướng dẫn khách mới mở tài khoản và đặt lệnh đầu tiên'] }
+        ],
+        task: (v) => 'Giúp em chuẩn bị một buổi trao đổi danh mục 20 phút với một nhà đầu tư cá nhân.\nTình huống:\n"""\n' + v.case + '\n"""\nMục tiêu của buổi: ' + v.goal + '.\n\n' +
+          'Trả về: 1) Dàn ý theo phút (mở đầu 2 phút, hỏi và nghe 8 phút, cùng nhìn danh mục 7 phút, chốt bước tiếp theo 3 phút). 2) 6 câu hỏi mở để hiểu mục tiêu, thời gian nắm giữ và mức chịu rủi ro của họ. 3) 3 điều em nên chỉ cho họ thấy trong danh mục (tỷ trọng, mức tập trung, đòn bẩy) mà không phán mã nào tốt hay xấu. 4) Những câu em KHÔNG được nói (dự báo giá, hứa lợi nhuận, chê nơi họ đang mở tài khoản). 5) Một câu chốt mời bước tiếp theo, nhẹ nhàng, để ngỏ. 6) Tin nhắn cảm ơn gửi sau buổi, dưới 60 chữ.'
+      },
+      {
         id: 'tu-do', icon: '✨', name: 'Yêu cầu tự do',
         desc: 'Gõ bất cứ yêu cầu nào, trang tự gắn bối cảnh thương hiệu và quy tắc.',
         fields: [

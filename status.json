@@ -1,0 +1,14 @@
+{
+  "at": "2026-11-14T02:25:00+07:00",
+  "mode": "kiem-tra",
+  "headline": "Cả đội chạy đủ trong 3 ngày 11–13/11. Hôm nay là ngày nâng cấp hệ thống.",
+  "pending": 0,
+  "bots": [],
+  "tasks": [
+    "Cài Form đăng ký và Sheet khách ở mục Phễu khách (3 phút)",
+    "Kết nối YouTube và TikTok ở mục Kênh",
+    "Gửi link tham gia cộng đồng Zalo"
+  ],
+  "lead": null,
+  "note": "Báo cáo đầu tiên do Claude ghi tay khi nâng cấp. Từ lần chạy 7h15 tới, agent điều hành tự ghi."
+}

@@ -237,3 +237,80 @@ footer { max-width: 1180px; margin: 0 auto; padding: 0 16px 32px; font-size: 12.
   .card { padding: 14px; }
   .funnel .fr { grid-template-columns: 100px minmax(0, 1fr) 40px; }
 }
+
+/* ===== Giao diện phòng điều hành (14/11/2026) ===== */
+.hero { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); gap: 22px; padding: 28px; border-radius: 22px; margin-bottom: 18px; color: #fff; position: relative; overflow: hidden;
+  background: radial-gradient(1200px 400px at 110% -40%, rgba(255, 214, 128, .28), transparent 60%), linear-gradient(135deg, #093f37 0%, #0f6b5c 58%, #188a73 100%); }
+.hero .eyebrow { font-size: 13px; opacity: .82; letter-spacing: .02em; }
+.hero h1 { font-size: clamp(24px, 4.4vw, 34px); margin: 6px 0 10px; color: #fff; font-weight: 800; }
+.hero-line { font-size: 17px; font-weight: 550; line-height: 1.45; margin: 0 0 6px; max-width: 58ch; }
+.hero-src { font-size: 12.5px; opacity: .75; margin: 0; }
+.hero .btns { margin-top: 16px; }
+.btn.hero-btn { background: #fff; color: #0b4f44; border-color: #fff; font-weight: 650; text-align: left; }
+.btn.hero-btn:hover { border-color: #fff; filter: brightness(.96); }
+.btn.hero-btn.ghost { background: transparent; color: #fff; border-color: rgba(255, 255, 255, .45); }
+.hero-kpi { display: grid; gap: 10px; align-content: center; }
+.kpi { display: flex; align-items: baseline; gap: 12px; padding: 12px 16px; border-radius: 14px; background: rgba(255, 255, 255, .12); border: 1px solid rgba(255, 255, 255, .16); color: #fff; text-decoration: none; }
+.kpi:hover { background: rgba(255, 255, 255, .2); }
+.kpi b { font-size: 28px; font-weight: 800; min-width: 62px; line-height: 1.1; }
+.kpi b small { font-size: 15px; opacity: .7; font-weight: 600; }
+.kpi span { font-size: 13.5px; opacity: .92; }
+@media (max-width: 860px) {
+  .hero { grid-template-columns: minmax(0, 1fr); padding: 20px; border-radius: 18px; }
+  .hero-kpi { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .kpi { flex-direction: column; gap: 2px; padding: 10px 12px; }
+  .kpi b { font-size: 22px; min-width: 0; }
+  .kpi span { font-size: 12px; }
+}
+
+.fwrap { margin-bottom: 18px; }
+.fhead { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; margin: 0 2px 8px; }
+.fstrip { display: flex; align-items: stretch; gap: 6px; text-decoration: none; color: inherit; overflow-x: auto; padding-bottom: 2px; scrollbar-width: thin; }
+.fs { flex: 1 1 0; min-width: 122px; background: var(--panel); border: 1px solid var(--line); border-top: 3px solid var(--brand); border-radius: var(--radius); padding: 12px 14px; box-shadow: var(--shadow); }
+.fs.hit { border-top-color: var(--gold); }
+.fstrip:hover .fs { border-color: var(--brand); }
+.fs-l { font-size: 12px; color: var(--muted); font-weight: 650; text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
+.fs-v { font-size: 28px; font-weight: 800; line-height: 1.2; }
+.fs-v small { font-size: 14px; color: var(--muted); font-weight: 500; }
+.fs-c { font-size: 12px; color: var(--muted); white-space: nowrap; }
+.fs-arrow { align-self: center; color: var(--muted); font-size: 20px; flex: none; }
+
+.tl { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.tl:last-child { border-bottom: 0; }
+.tl time { font-size: 13px; font-variant-numeric: tabular-nums; color: var(--muted); min-width: 44px; font-weight: 600; }
+.tl .t { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.tl .who { display: inline-block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); background: var(--panel-2); border-radius: 6px; padding: 1px 6px; margin-right: 8px; vertical-align: 1px; text-decoration: none; }
+.tl .who.me { background: var(--brand-soft); color: var(--brand); }
+.tl.me { cursor: pointer; }
+.tl.me input { width: 18px; height: 18px; accent-color: var(--brand); flex: none; margin: 0; cursor: pointer; }
+.tl .botic { width: 18px; text-align: center; color: var(--line); flex: none; font-size: 11px; }
+.tl.bot.done .botic { color: var(--ok); }
+.tl.done .t { color: var(--muted); }
+.tl.me.late time { color: var(--warn); }
+.tl a { font-size: 13px; white-space: nowrap; }
+.tl-now { display: flex; align-items: center; gap: 10px; margin: 4px 0; color: var(--brand); font-size: 12px; font-weight: 700; }
+.tl-now::before { content: ""; flex: 0 0 14px; height: 2px; background: var(--brand); border-radius: 1px; }
+.tl-now::after { content: ""; flex: 1; height: 1px; background: var(--brand); opacity: .45; }
+
+.mic { font-size: 18px; width: 26px; text-align: center; flex: none; line-height: 1.5; }
+.mic.big { font-size: 24px; width: 46px; height: 46px; display: grid; place-items: center; background: var(--panel-2); border-radius: 13px; }
+.flow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 18px 0 0; font-size: 13px; font-weight: 650; }
+.flow span { background: var(--brand-soft); color: var(--brand); padding: 5px 12px; border-radius: 999px; }
+.flow i { color: var(--muted); font-style: normal; }
+.stage-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; margin: 24px 0 10px; }
+.members { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+.member { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 10px; }
+.member p { margin: 0; font-size: 14px; }
+.member .mrow { display: flex; align-items: center; gap: 12px; }
+.member .grow { flex: 1; min-width: 0; }
+.member .role { font-weight: 700; }
+.member .hands { font-size: 13px; color: var(--muted); border-top: 1px dashed var(--line); padding-top: 10px; margin-top: auto; }
+
+details.qa { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; }
+details.qa summary { cursor: pointer; font-weight: 600; }
+details.qa[open] summary { margin-bottom: 8px; }
+details.install { margin-bottom: 18px; border-color: var(--brand); }
+details.install > summary { cursor: pointer; list-style: none; display: flex; flex-direction: column; gap: 2px; }
+details.install > summary::-webkit-details-marker { display: none; }
+details.install > summary h2 { margin: 0; }
+details.install > summary h2::after { content: " ▾"; color: var(--muted); font-size: 14px; }

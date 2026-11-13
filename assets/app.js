@@ -10,7 +10,7 @@
   const WD_LONG = ['Chủ nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
 
   /* ---------- Lưu trữ ---------- */
-  const blank = () => ({ channels: {}, tasks: {}, daily: {}, jobsSeen: {}, video: {}, drafts: [], compose: '', claudeForm: null, claudeHistory: [], log: [], notes: {}, funnel: {}, theme: 'auto' });
+  const blank = () => ({ channels: {}, tasks: {}, daily: {}, jobsSeen: {}, video: {}, drafts: [], compose: '', claudeForm: null, claudeHistory: [], log: [], notes: {}, funnel: {}, goals: {}, leadForm: '', theme: 'auto' });
   let S = load();
   function load() {
     try {
@@ -159,20 +159,40 @@
   /* ---------- Trạng thái trực tiếp: đọc lịch sử đăng bài công khai của website trên GitHub ---------- */
   // Không cần đăng nhập. Website chỉ đăng được khi bản tin đã về, nên một bài lên web = bot đó đã chạy.
   const LIVE_KEY = 'tq-live-v1', LIVE_TTL = 10 * 60e3;
-  let LIVE = { at: 0, tried: 0, commits: [], runs: [], err: '' };
+  let LIVE = { at: 0, tried: 0, commits: [], runs: [], err: '', status: null };
+  // Báo cáo của agent điều hành: coi là dữ liệu, cắt ngắn và ép kiểu từng trường trước khi dùng
+  function cleanStatus(j) {
+    if (!j || typeof j !== 'object') return null;
+    const str = (v, n) => String(v == null ? '' : v).slice(0, n);
+    const t = Date.parse(j.at);
+    if (isNaN(t)) return null;
+    const num = (v) => Math.max(0, parseInt(v, 10) || 0);
+    return {
+      at: t, mode: str(j.mode, 12), headline: str(j.headline, 200), note: str(j.note, 240), pending: num(j.pending),
+      bots: (Array.isArray(j.bots) ? j.bots : []).slice(0, 30).map((b) => ({ id: str(b && b.id, 30), ok: !!b && b.ok === true, time: /^\d{2}:\d{2}$/.test(b && b.time) ? b.time : '', note: str(b && b.note, 160) })),
+      tasks: (Array.isArray(j.tasks) ? j.tasks : []).slice(0, 12).map((x) => str(x, 140)),
+      lead: j.lead && typeof j.lead === 'object' ? { tong: num(j.lead.tong), moi: num(j.lead.moi), canNhan: num(j.lead.canNhan) } : null
+    };
+  }
   try { const raw = localStorage.getItem(LIVE_KEY); if (raw) LIVE = Object.assign(LIVE, JSON.parse(raw), { err: '' }); } catch (e) { /* bỏ qua */ }
   let liveBusy = false;
   async function liveRefresh(force) {
     const L = D.live;
     if (!L || liveBusy || (!force && now() - Math.max(LIVE.at, LIVE.tried) < LIVE_TTL)) return;
     liveBusy = true;
+    if (D.status && D.status.url) {
+      try {
+        const s = await fetch(D.status.url + '?t=' + Math.floor(now() / 3e5), { cache: 'no-store' });
+        if (s.ok) { LIVE.status = cleanStatus(await s.json()); try { localStorage.setItem(LIVE_KEY, JSON.stringify(LIVE)); } catch (e) { /* bỏ qua */ } }
+      } catch (e) { /* chưa có báo cáo hoặc mất mạng: bỏ qua */ }
+    }
     try {
       const api = 'https://api.github.com/repos/' + L.repo;
       const [c, r] = await Promise.all([fetch(api + '/commits?per_page=60'), fetch(api + '/actions/runs?per_page=12')]);
       if (!c.ok || !r.ok) throw new Error((c.status === 403 || r.status === 403 || c.status === 429 || r.status === 429) ? 'GitHub tạm giới hạn lượt đọc, thử lại sau ít phút.' : 'GitHub trả lỗi ' + (c.ok ? r.status : c.status) + '.');
       const cj = await c.json(), rj = await r.json();
       LIVE = {
-        at: now(), tried: now(), err: '',
+        at: now(), tried: now(), err: '', status: LIVE.status,
         commits: (Array.isArray(cj) ? cj : []).map((x) => ({ t: Date.parse(x.commit.committer.date), m: String(x.commit.message).split('\n')[0].slice(0, 120) })),
         runs: ((rj && rj.workflow_runs) || []).map((x) => ({ t: Date.parse(x.created_at), n: String(x.name), s: String(x.status), c: String(x.conclusion), u: String(x.html_url) }))
       };
@@ -185,7 +205,7 @@
     liveBusy = false;
     const { route } = parse();
     const busy = document.activeElement && /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName);
-    if ((route === '' || route === 'lich') && !busy) rerender();
+    if ((route === '' || route === 'lich' || route === 'doi') && !busy) rerender();
   }
   // Bằng chứng một lần chạy đã ra kết quả: có commit đúng loại trên website sau giờ chạy
   function liveProof(o) {
@@ -199,7 +219,13 @@
     const manual = (S.jobsSeen[o.key] || {})[o.id];
     if (manual) return { at: Date.parse(manual), auto: false };
     const t = liveProof(o);
-    return t ? { at: t, auto: true } : null;
+    if (t) return { at: t, auto: true };
+    const st = LIVE.status; // agent điều hành đã kiểm tra và báo bot này ra kết quả
+    if (st && dayKey(st.at) === o.key && o.ms <= st.at) {
+      const b = st.bots.find((x) => x.id === o.job.id && x.ok);
+      if (b) return { at: b.time ? Math.max(vnMs(o.key, b.time), o.ms) : st.at, auto: true };
+    }
+    return null;
   }
   const CONTENT_NAMES = { 'diem-tin': 'Điểm tin', 'nhan-dinh': 'Nhận định', 'tong-ket': 'Tổng kết phiên', 'bao-cao': 'Báo cáo' };
   function liveSummary() {
@@ -254,7 +280,7 @@
 
   /* ---------- Bố cục chung ---------- */
   const NAV = [
-    ['', 'Tổng quan'], ['lich', 'Lịch tự động'], ['dang-bai', 'Đăng bài'], ['claude', 'Trợ lý Claude'], ['tim-khach', 'Tìm khách'], ['nhat-ky', 'Nhật ký'], ['cai-dat', 'Cài đặt']
+    ['', 'Hôm nay'], ['tim-khach', 'Phễu khách'], ['doi', 'Đội ngũ'], ['dang-bai', 'Đăng bài'], ['lich', 'Lịch'], ['claude', 'Trợ lý Claude'], ['nhat-ky', 'Nhật ký'], ['cai-dat', 'Cài đặt']
   ];
   function renderNav(route) {
     const pending = D.channels.filter((c) => needsAction(chState(c.id).status)).length;
@@ -269,47 +295,168 @@
     $('#clock').innerHTML = '<b class="num">' + fmtHM(now()) + '</b><br><span class="date">' + WD_LONG[d.getUTCDay()] + ', ' + fmtDM(now()) + ' · </span>' + esc(marketStatus().text);
   }
 
-  /* ---------- Trang: Tổng quan ---------- */
+  /* ---------- Đội ngũ: trạng thái từng thành viên ---------- */
+  const GRACE = 40 * 60e3;
+  const statusToday = () => (LIVE.status && dayKey(LIVE.status.at) === dayKey() ? LIVE.status : null);
+  // Có cách nào tự biết lượt chạy này đã ra kết quả hay chưa?
+  function verifiable(o) {
+    if (o.job.proof) return LIVE.commits.length > 0;
+    const st = LIVE.status;
+    return !!(st && dayKey(st.at) === o.key && st.at >= o.ms + GRACE);
+  }
+  function occState(o) {
+    const got = seenInfo(o);
+    if (got) return { kind: 'ok', got };
+    if (o.ms > now()) return { kind: 'wait' };
+    if (now() - o.ms <= GRACE) return { kind: 'run' };
+    return { kind: verifiable(o) ? 'late' : 'unknown' };
+  }
+  function memberState(m) {
+    if (m.human) return { kind: 'info', label: 'Con người' };
+    if (m.needs) return needsAction(chState(m.needs).status) ? { kind: 'warn', label: 'Chưa cài', href: '#/tim-khach' } : { kind: 'ok', label: 'Đang chạy' };
+    const k = dayKey();
+    let total = 0, due = 0, got = 0, late = 0, unknown = 0;
+    for (const id of m.jobs) {
+      const j = D.jobs.find((x) => x.id === id);
+      if (!j) continue;
+      for (const o of occurrences(j, k)) {
+        total++;
+        const s = occState(o).kind;
+        if (s !== 'wait') due++;
+        if (s === 'ok') got++; else if (s === 'late') late++; else if (s === 'unknown') unknown++;
+      }
+    }
+    if (late) return { kind: 'warn', label: 'Thiếu ' + late + ' kết quả', href: '#/lich' };
+    if (due && got === due) return { kind: 'ok', label: 'Xong ' + got + '/' + due + ' hôm nay' };
+    if (unknown) return { kind: 'muted', label: 'Chưa xác nhận', href: '#/lich' };
+    if (due) return { kind: 'info', label: 'Đang chạy' };
+    return { kind: 'muted', label: total ? 'Chưa tới giờ' : 'Hôm nay nghỉ' };
+  }
+  function memberPill(m) {
+    const s = memberState(m);
+    return s.href ? '<a class="pill k-' + s.kind + '" href="' + s.href + '">' + esc(s.label) + '</a>' : '<span class="pill k-' + s.kind + '">' + esc(s.label) + '</span>';
+  }
+
+  /* ---------- Trang: Hôm nay ---------- */
+  function goLink(go) {
+    return go ? '<a href="' + esc(go) + '"' + (go.indexOf('https://') === 0 ? ' target="_blank" rel="noopener"' : '') + '>Làm ›</a>' : '';
+  }
+  function timeline() {
+    const k = dayKey(), doneMap = S.daily[k] || {};
+    const rows = dailyToday().map((x) => ({ ms: vnMs(k, x.time), me: x }))
+      .concat(D.jobs.flatMap((j) => occurrences(j, k)).map((o) => ({ ms: o.ms, bot: o })))
+      .sort((a, b) => a.ms - b.ms || (a.bot ? -1 : 1));
+    if (!rows.length) return '<p class="empty">Hôm nay không có việc nào.</p>';
+    let marked = false, html = '';
+    for (const r of rows) {
+      if (!marked && r.ms > now()) { html += '<div class="tl-now"><span>Bây giờ ' + fmtHM(now()) + '</span></div>'; marked = true; }
+      if (r.me) {
+        const x = r.me, done = doneMap[x.id];
+        html += '<label class="tl me' + (done ? ' done' : '') + (!done && r.ms <= now() ? ' late' : '') + '"><time>' + x.time + '</time>' +
+          '<input type="checkbox" data-act="toggle-daily" data-id="' + esc(x.id) + '"' + (done ? ' checked' : '') + '>' +
+          '<span class="t"><span class="who me">Bạn</span>' + esc(x.text) + '</span>' + goLink(x.go) + '</label>';
+      } else {
+        const o = r.bot, s = occState(o);
+        const pill = s.kind === 'ok' ? '<span class="pill k-ok">Xong ' + fmtHM(s.got.at) + '</span>' :
+          s.kind === 'late' ? '<a class="pill k-warn" href="#/lich">Chưa thấy kết quả</a>' :
+          s.kind === 'unknown' ? '<a class="pill k-muted" href="#/lich">Chưa xác nhận</a>' :
+          s.kind === 'run' ? '<span class="pill k-info">Đang chạy</span>' : '';
+        html += '<div class="tl bot' + (s.kind === 'ok' ? ' done' : '') + '"><time>' + o.time + '</time><span class="botic" aria-hidden="true">●</span>' +
+          '<span class="t"><span class="who">Đội bot</span>' + esc(o.job.name) + '</span>' + pill + '</div>';
+      }
+    }
+    if (!marked) html += '<div class="tl-now"><span>Bây giờ ' + fmtHM(now()) + ' · hết việc trong ngày</span></div>';
+    return html;
+  }
+  function funnelStrip() {
+    const f = S.funnel[weekKey()] || {}, g = S.goals || {};
+    return '<a class="fstrip" href="#/tim-khach" title="Mở Phễu khách">' + FUNNEL.map(([key, l], i) => {
+      const v = +f[key] || 0, goal = +g[key] || 0;
+      const prev = i ? (+f[FUNNEL[i - 1][0]] || 0) : 0;
+      const conv = i && prev ? Math.round(v / prev * 100) + '% từ bước trước' : (i ? '—' : 'đầu phễu');
+      return '<div class="fs' + (goal && v >= goal ? ' hit' : '') + '"><div class="fs-l">' + l + '</div><div class="fs-v num">' + v + (goal ? '<small> / ' + goal + '</small>' : '') + '</div><div class="fs-c">' + conv + '</div></div>';
+    }).join('<span class="fs-arrow" aria-hidden="true">›</span>') + '</a>';
+  }
   function pageHome() {
     const k = dayKey();
     const items = dailyToday();
     const doneMap = S.daily[k] || {};
     const doneN = items.filter((x) => doneMap[x.id]).length;
     const jt = todayJobs();
-    const ready = D.channels.filter((c) => !c.workflow && !needsAction(chState(c.id).status)).length;
-    const totalCh = D.channels.filter((c) => !c.workflow).length;
-    const pendingDrafts = S.drafts.filter((d) => !Object.keys(d.posted || {}).length).length;
+    const occToday = D.jobs.flatMap((j) => occurrences(j, k)).length;
     const todo = D.channels.filter((c) => needsAction(chState(c.id).status));
-    const upcoming = D.jobs.map((j) => ({ j, ms: nextRun(j) })).filter((x) => x.ms).sort((a, b) => a.ms - b.ms).slice(0, 5);
+    const st = statusToday();
     const hour = vn().getUTCHours();
     const hello = hour < 11 ? 'Chào buổi sáng' : hour < 14 ? 'Chào buổi trưa' : hour < 18 ? 'Chào buổi chiều' : 'Chào buổi tối';
-    const pct = (a, b) => (b ? Math.round(a / b * 100) : 0);
+    const next = items.find((x) => !doneMap[x.id]);
+    const f = S.funnel[weekKey()] || {};
+    const funnelEmpty = !FUNNEL.some(([key]) => +f[key]);
+    const line = st && st.headline ? st.headline : (items.length ? 'Hôm nay có ' + items.length + ' việc cần bạn làm' : 'Hôm nay không có việc tay') + ', đội bot có ' + occToday + ' lượt chạy.';
+    const leadNote = st && st.lead ? 'Sheet khách: ' + st.lead.moi + ' đăng ký mới tuần này · ' + st.lead.canNhan + ' người cần nhắn hôm nay.' :
+      (needsAction(chState('lead').status) ? 'Chưa có Form đăng ký nên phễu chưa đếm được. Cài trong 3 phút ở mục Phễu khách.' : (funnelEmpty ? 'Chưa nhập số tuần này. Bấm vào để cập nhật.' : ''));
 
-    const groups = [['auto', 'Chạy tự động'], ['social', 'Mạng xã hội'], ['khach', 'Khách hàng']];
-    const tiles = groups.map(([g, label]) => '<div class="tile-group">' + label + '</div><div class="tiles">' +
-      D.channels.filter((c) => c.group === g).map((c) =>
-        '<div class="tile" id="tile-' + c.id + '"><div class="row"><span class="ic" aria-hidden="true">' + c.icon + '</span><span class="go" aria-hidden="true">›</span></div>' +
-        '<div class="nm"><a href="#/kenh/' + c.id + '">' + esc(c.name) + '</a></div>' +
-        '<div class="ln">' + esc(tileLine(c.id)) + '</div>' +
-        '<div>' + pillHtml(c.id) + '</div></div>').join('') + '</div>').join('');
+    return '<section class="hero"><div class="hero-main"><div class="eyebrow">' + WD_LONG[weekdayOf(k)] + ' ' + fmtDM(now()) + ' · ' + esc(marketStatus().text) + '</div>' +
+      '<h1>' + hello + ', Thiên Quốc</h1><p class="hero-line">' + esc(line) + '</p>' +
+      (st ? '<p class="hero-src">Agent điều hành báo lúc ' + fmtHM(st.at) + '</p>' : '') +
+      '<div class="btns">' + (next ? '<a class="btn hero-btn" href="' + esc(next.go || '#viec-hom-nay') + '"' + (next.go && next.go.indexOf('https://') === 0 ? ' target="_blank" rel="noopener"' : '') + '>Việc tiếp theo · ' + next.time + ' ' + esc(next.text.length > 44 ? next.text.slice(0, 42) + '…' : next.text) + '</a>' : '') +
+      '<a class="btn hero-btn ghost ext" href="' + D.links.gmail + '" target="_blank" rel="noopener">Mở Gmail</a></div></div>' +
+      '<div class="hero-kpi">' +
+      '<a class="kpi" href="#viec-hom-nay"><b class="num">' + doneN + '<small>/' + items.length + '</small></b><span>việc của bạn đã xong</span></a>' +
+      '<a class="kpi" href="#/doi"><b class="num">' + jt.seen + '<small>/' + jt.due + '</small></b><span>lượt bot đã có kết quả</span></a>' +
+      '<a class="kpi" href="' + (st && st.pending ? D.links.gmail : '#/dang-bai') + '"' + (st && st.pending ? ' target="_blank" rel="noopener"' : '') + '><b class="num">' + (st ? st.pending : S.drafts.filter((d) => !Object.keys(d.posted || {}).length).length) + '</b><span>' + (st ? 'bài chờ bạn duyệt' : 'bài nháp chưa đăng') + '</span></a>' +
+      '</div></section>' +
 
-    return '<div class="pagehead"><div class="grow"><h1>' + hello + ', Thiên Quốc</h1><p>Bấm vào từng ô để xem sâu hơn. Ô ghi <b>Chưa kết nối</b> sẽ dẫn thẳng tới trang đăng nhập và kết nối.</p></div></div>' +
-      '<div class="stats">' +
-      '<a class="stat" href="#cac-kenh"><div class="label">Kênh sẵn sàng</div><div class="value">' + ready + '<small> / ' + totalCh + '</small></div><div class="bar"><i style="width:' + pct(ready, totalCh) + '%"></i></div></a>' +
-      '<a class="stat" href="#viec-hom-nay"><div class="label">Việc tay hôm nay</div><div class="value">' + doneN + '<small> / ' + items.length + '</small></div><div class="bar"><i style="width:' + pct(doneN, items.length) + '%"></i></div></a>' +
-      '<a class="stat" href="#/lich"><div class="label">Bản tin tự động hôm nay</div><div class="value">' + jt.seen + '<small> / ' + jt.due + ' tới giờ</small></div><div class="hint">Bài lên website được tự xác nhận</div></a>' +
-      '<a class="stat" href="#/dang-bai"><div class="label">Bài nháp chưa đăng</div><div class="value">' + pendingDrafts + '</div><div class="hint">Mở mục Đăng bài</div></a>' +
-      '</div>' +
-      '<div class="grid2"><div id="cac-kenh">' + tiles + '</div><div>' +
+      '<section class="fwrap"><div class="fhead"><h2>Phễu khách tuần này</h2><span class="muted small">' + esc(leadNote) + '</span></div>' + funnelStrip() + '</section>' +
+
+      '<div class="grid2"><div>' +
+      '<div class="card" id="viec-hom-nay"><div class="card-head"><h2>Dòng việc hôm nay</h2><span class="right muted small">Bạn và đội bot, theo giờ</span></div>' + timeline() + '</div>' +
+      '<div class="card" id="gan-day"><div class="card-head"><h2>Nhật ký gần đây</h2><a class="right small" href="#/nhat-ky">Tất cả</a></div>' + logList(S.log.slice(0, 5)) + '</div>' +
+      '</div><div>' +
       (todo.length ? '<div class="card" id="can-xu-ly"><div class="card-head"><h2>Cần xử lý</h2></div><ul class="list">' +
-        todo.map((c) => '<li><span class="dot warn"></span><div class="body"><b>' + c.icon + ' ' + esc(c.name) + '</b><div class="tag">' + esc(chState(c.id).note || c.desc) + '</div></div><a class="btn small primary" href="#/ket-noi/' + c.id + '">' + (c.id === 'lead' ? 'Tạo' : 'Kết nối') + '</a></li>').join('') + '</ul></div>' : '') +
+        todo.map((c) => '<li><span class="dot warn"></span><div class="body"><b>' + c.icon + ' ' + esc(c.name) + '</b><div class="tag">' + esc(chState(c.id).note || c.desc) + '</div></div><a class="btn small primary" href="' + (c.id === 'lead' ? '#/tim-khach' : '#/ket-noi/' + c.id) + '">' + (c.id === 'lead' ? 'Cài' : 'Kết nối') + '</a></li>').join('') + '</ul></div>' : '') +
+      '<div class="card" id="doi-mini"><div class="card-head"><h2>Đội ngũ</h2><a class="right small" href="#/doi">Xem cả đội</a></div><ul class="list">' +
+      D.team.map((m) => '<li><span class="mic" aria-hidden="true">' + m.icon + '</span><div class="body"><b>' + esc(m.role) + '</b><div class="tag">' + esc(m.short) + '</div></div>' + memberPill(m) + '</li>').join('') + '</ul></div>' +
       liveCard() +
-      '<div class="card" id="viec-hom-nay"><div class="card-head"><h2>Việc hôm nay</h2><span class="right muted small">' + WD_LONG[weekdayOf(k)] + '</span></div>' +
-      (items.length ? items.map((x) => checkRow('toggle-daily', x.id, x.text, doneMap[x.id], x.time, x.go)).join('') : '<p class="empty">Hôm nay không có việc tay. Nghỉ ngơi nhé!</p>') + '</div>' +
-      '<div class="card" id="sap-chay"><div class="card-head"><h2>Sắp chạy tự động</h2><a class="right small" href="#/lich">Xem lịch</a></div><ul class="list">' +
-      upcoming.map((u) => '<li><time>' + fmtHM(u.ms) + ' · ' + WD[vn(u.ms).getUTCDay()] + '</time><div class="body">' + esc(u.j.name) + '<div class="tag">' + rel(u.ms) + '</div></div></li>').join('') + '</ul></div>' +
-      '<div class="card" id="gan-day"><div class="card-head"><h2>Nhật ký gần đây</h2><a class="right small" href="#/nhat-ky">Tất cả</a></div>' + logList(S.log.slice(0, 6)) + '</div>' +
+      '<div class="card" id="cac-kenh"><div class="card-head"><h2>Kênh</h2></div><ul class="list">' +
+      D.channels.map((c) => '<li id="tile-' + c.id + '"><span class="mic" aria-hidden="true">' + c.icon + '</span><div class="body"><a href="#/kenh/' + c.id + '"><b>' + esc(c.name) + '</b></a><div class="tag">' + esc(tileLine(c.id)) + '</div></div>' + pillHtml(c.id) + '</li>').join('') + '</ul></div>' +
       '</div></div>';
+  }
+
+  /* ---------- Trang: Đội ngũ ---------- */
+  const STAGES = [
+    ['thu-hut', 'Thu hút người xem', 'Làm cho người chưa biết kênh dừng lại xem.'],
+    ['nuoi', 'Nuôi dưỡng niềm tin', 'Cho người xem lý do quay lại mỗi ngày.'],
+    ['chuyen', 'Chuyển thành khách', 'Từ người đăng ký tới buổi trao đổi và mở tài khoản.'],
+    ['dieu-phoi', 'Điều phối', 'Giữ cả đội chạy đúng giờ, đúng quy tắc nội dung.']
+  ];
+  function jobLine(j) {
+    const days = j.days.length === 7 ? 'Mỗi ngày' : j.days.map((d) => WD[d]).join(' ');
+    return '<li><span class="dot info"></span><div class="body">' + esc(j.name) + '<div class="tag">' + days + ' · ' + j.times.join(', ') + ' · lần tới ' + fmtFull(nextRun(j)) + '</div></div>' +
+      (j.subject ? '<a class="small" href="' + gmailSearch(j.subject) + '" target="_blank" rel="noopener">Gmail ↗</a>' : j.link ? '<a class="small" href="' + esc(j.link) + '" target="_blank" rel="noopener">Xem ↗</a>' : '') + '</li>';
+  }
+  function pageTeam() {
+    const st = LIVE.status;
+    const report = st ? '<div class="card" id="bao-cao-agent"><div class="card-head"><h2>Báo cáo gần nhất của agent điều hành</h2><span class="right muted small">' + fmtFull(st.at) + ' (' + rel(st.at) + ')</span></div>' +
+      '<p class="hero-line" style="margin:0 0 10px">' + esc(st.headline || '—') + '</p>' +
+      (st.tasks.length ? '<ul class="list">' + st.tasks.map((t) => '<li><span class="dot info"></span><div class="body">' + esc(t) + '</div></li>').join('') + '</ul>' : '') +
+      (st.bots.some((b) => !b.ok) ? '<ul class="list">' + st.bots.filter((b) => !b.ok).map((b) => { const j = D.jobs.find((x) => x.id === b.id); return '<li><span class="dot warn"></span><div class="body"><b>' + esc(j ? j.name : b.id) + '</b><div class="tag">' + esc(b.note || 'Chưa có kết quả') + '</div></div></li>'; }).join('') + '</ul>' : '') +
+      (st.note ? '<p class="muted small" style="margin:10px 0 0">' + esc(st.note) + '</p>' : '') + '</div>' :
+      '<div class="note">Agent điều hành sẽ tự ghi báo cáo lên đây sau mỗi lần chạy sáng (7h15) và chiều (17h40). Chưa có báo cáo nào.</div>';
+    return '<div class="pagehead"><div class="grow"><h1>Đội ngũ</h1><p>Mỗi bot là một thành viên có việc riêng trong phễu tìm khách. Bạn là người duy nhất nói chuyện với khách và chốt.</p></div>' +
+      '<div class="btns"><a class="btn" href="#/lich">Lịch chạy chi tiết</a></div></div>' + report +
+      '<div class="flow">' + STAGES.map(([id, name]) => '<span>' + name + '</span>').join('<i aria-hidden="true">→</i>') + '</div>' +
+      STAGES.map(([id, name, why]) => {
+        const ms = D.team.filter((m) => m.stage === id);
+        if (!ms.length) return '';
+        return '<div class="stage-head"><h2>' + name + '</h2><span class="muted small">' + why + '</span></div><div class="members">' + ms.map((m) => {
+          const jobs = (m.jobs || []).map((id2) => D.jobs.find((x) => x.id === id2)).filter(Boolean);
+          return '<div class="member" id="tv-' + m.id + '"><div class="mrow"><span class="mic big" aria-hidden="true">' + m.icon + '</span><div class="grow"><div class="role">' + esc(m.role) + '</div><div class="muted small">' + esc(m.kind) + '</div></div>' + memberPill(m) + '</div>' +
+            '<p>' + esc(m.does) + '</p>' +
+            (jobs.length ? '<ul class="list">' + jobs.map(jobLine).join('') + '</ul>' : '') +
+            (m.hands ? '<p class="hands"><b>Bàn giao:</b> ' + esc(m.hands) + '</p>' : '') +
+            (m.go ? '<div class="btns"><a class="btn small" href="' + esc(m.go[1]) + '">' + esc(m.go[0]) + '</a></div>' : '') + '</div>';
+        }).join('') + '</div>';
+      }).join('');
   }
 
   function checkRow(act, id, text, done, when, go, extra) {
@@ -337,7 +484,7 @@
     const tasksDone = S.tasks[id] || {};
     const log = S.log.filter((r) => r.ch === id).slice(0, 30);
     const p = pillFor(id);
-    let html = '<div class="crumbs"><a href="#/">Tổng quan</a> › ' + esc(c.name) + '</div>' +
+    let html = '<div class="crumbs"><a href="#/">Hôm nay</a> › ' + esc(c.name) + '</div>' +
       '<div class="pagehead"><div class="grow"><h1>' + c.icon + ' ' + esc(c.name) + '</h1><p>' + esc(c.desc) + '</p></div>' +
       '<div class="btns">' + (c.group === 'social' ? '<a class="btn" href="#/dang-bai/' + id + '">Soạn & đăng bài</a>' : '') +
       (c.connect ? '<a class="btn primary" href="#/ket-noi/' + id + '">' + (needsAction(st.status) ? (id === 'lead' ? 'Bắt đầu tạo' : 'Kết nối ngay') : 'Quản lý kết nối') + '</a>' : '') + '</div></div>' +
@@ -403,7 +550,7 @@
     const f = c.connect.idField;
     const curVal = f.kind === 'url' ? (st.url || '') : (st.handle || '');
 
-    let html = '<div class="crumbs"><a href="#/">Tổng quan</a> › <a href="#/kenh/' + id + '">' + esc(c.name) + '</a> › Kết nối</div>' +
+    let html = '<div class="crumbs"><a href="#/">Hôm nay</a> › <a href="#/kenh/' + id + '">' + esc(c.name) + '</a> › Kết nối</div>' +
       '<div class="pagehead"><div class="grow"><h1>' + (id === 'lead' ? 'Tạo' : 'Kết nối') + ' ' + c.icon + ' ' + esc(c.name) + '</h1><p>Làm lần lượt từng bước. Nút có dấu ↗ mở trang đăng nhập chính thức ở tab mới, bạn tự đăng nhập ở đó. Trang này không bao giờ hỏi mật khẩu.</p></div>' +
       '<div class="status-big">' + pillHtml(id) + '</div></div>';
 
@@ -571,28 +718,53 @@
     { id: 'bk', label: 'Có ghi điều băn khoăn', type: 'checkbox', opts: [['Có', 1]] }
   ];
   const FUNNEL = [['moi', 'Lead mới'], ['nhan', 'Đã nhắn'], ['traloi', 'Đã trả lời'], ['hen', 'Hẹn trao đổi'], ['mo', 'Mở tài khoản']];
+  function installCard(open) {
+    return '<details class="card install" id="cai-dat-lead"' + (open ? ' open' : '') + '><summary><h2>Cài Form đăng ký và Sheet khách trong 3 phút</h2><span class="muted small">Làm một lần. Mã chạy trong tài khoản Google của bạn, dữ liệu khách chỉ bạn xem được.</span></summary>' +
+      '<ol class="steps" style="margin-top:14px">' +
+      '<li><h3>Copy mã cài đặt</h3><p>Một nút bấm, không cần đọc mã.</p><div class="btns"><button class="btn primary" type="button" data-act="copy-lead-code">Copy mã cài đặt</button></div></li>' +
+      '<li><h3>Mở trang Apps Script và dán</h3><p>Đăng nhập đúng tài khoản Google nhận báo cáo. Xoá hết chữ có sẵn, dán mã (Ctrl+V), bấm biểu tượng lưu.</p><div class="btns"><a class="btn ext" href="https://script.new" target="_blank" rel="noopener">Mở script.new</a></div></li>' +
+      '<li><h3>Chọn hàm caiDat rồi bấm Chạy</h3><p>Google hỏi quyền: chọn tài khoản → <b>Nâng cao</b> → <b>Đi tới dự án</b> → <b>Cho phép</b>. Cảnh báo "chưa xác minh" là bình thường vì đây là mã của riêng bạn.</p></li>' +
+      '<li><h3>Mở email "Đã cài xong hệ thống khách đăng ký"</h3><p>Trong email có link Form (gửi cho khách), link Sheet khách và link bảng tổng hợp. Dán hai link đầu vào ô bên dưới.</p><div class="btns"><a class="btn" href="#/ket-noi/lead">Dán link Sheet khách</a></div></li>' +
+      '</ol><p class="muted small" style="margin:0">Sau khi cài: có người đăng ký là Sheet tự chấm điểm và tô màu; khách Nóng thì báo email ngay; 8h sáng T2–T6 có email "Việc tìm khách hôm nay" kèm tin nhắn soạn sẵn; 19h Chủ nhật có báo cáo phễu tuần.</p></details>';
+  }
+  function playbookCard() {
+    return '<div class="card" id="kich-ban-tu-van"><div class="card-head"><h2>Khi khách hỏi khó</h2><span class="right muted small">Bấm để mở, copy rồi sửa cho hợp người</span></div>' +
+      D.playbook.map((p, i) => '<details class="qa"><summary>' + esc(p.q) + '</summary><p class="muted small">' + esc(p.aim) + '</p><pre class="msg">' + esc(p.a) + '</pre><div class="btns"><button class="btn small" type="button" data-act="copy" data-text="' + esc(p.a) + '">Copy câu trả lời</button></div></details>').join('') +
+      '<p class="muted small" style="margin:10px 0 0">Không nêu tên công ty chứng khoán trong tin nhắn công khai, không hứa lợi nhuận, không khuyến nghị mã. Con số phí, lãi vay phải lấy từ biểu phí hiện hành.</p></div>';
+  }
   function pageLeads() {
     const wk = weekKey();
-    const f = S.funnel[wk] || {};
+    const f = S.funnel[wk] || {}, g = S.goals || {};
     const st = chState('lead');
-    return '<div class="pagehead"><div class="grow"><h1>Tìm khách</h1><p>Chấm điểm, soạn tin nhắn theo mốc và theo dõi phễu tuần. Trang này <b>không lưu</b> tên, số điện thoại hay thông tin của khách (quy tắc 6).</p></div>' +
-      '<div class="btns">' + (st.url ? '<a class="btn ext primary" href="' + esc(st.url) + '" target="_blank" rel="noopener">Mở Sheet Lead</a>' : '<a class="btn primary" href="#/ket-noi/lead">Tạo Form + Sheet Lead</a>') + '</div></div>' +
+    const ready = !needsAction(st.status);
+    const agent = LIVE.status && LIVE.status.lead;
+    return '<div class="pagehead"><div class="grow"><h1>Phễu khách</h1><p>Từ người xem tới người đăng ký, tới buổi trao đổi, tới mở tài khoản. Trang này <b>không lưu</b> tên hay số điện thoại của khách: dữ liệu khách chỉ nằm trong Google Sheet của bạn.</p></div>' +
+      '<div class="btns">' + (st.url ? '<a class="btn ext primary" href="' + esc(st.url) + '" target="_blank" rel="noopener">Mở Sheet khách</a>' : '') +
+      (S.leadForm ? '<button class="btn" type="button" data-act="copy" data-text="' + esc(S.leadForm) + '">Copy link Form</button>' : '') + '</div></div>' +
+      (ready ? '' : installCard(true)) +
+      '<section class="fwrap"><div class="fhead"><h2>Tuần này</h2><span class="muted small">từ ' + fmtDM(vnMs(wk, '12:00')) + (agent ? ' · Sheet báo: ' + agent.moi + ' đăng ký mới, ' + agent.canNhan + ' cần nhắn hôm nay' : '') + '</span></div>' + funnelStrip() + '</section>' +
       '<div class="grid2"><div>' +
-      '<div class="card" id="cham-diem"><div class="card-head"><h2>Chấm điểm khách</h2></div><form id="leadform">' +
-      LEAD_Q.map((q) => '<fieldset><legend>' + esc(q.label) + '</legend><div class="choices">' + q.opts.map((o, i) => '<label><input type="' + q.type + '" name="' + q.id + '" value="' + i + '">' + esc(o[0]) + (o[1] ? ' <span class="muted">+' + o[1] + '</span>' : '') + '</label>').join('') + '</div></fieldset>').join('') +
-      '</form><div class="confirm status-big"><div><div class="muted small">Điểm</div><div class="score" id="score">0</div></div><div id="rank"></div><div class="small" id="rank-next" style="flex:1 1 200px"></div></div></div>' +
-      '<div class="card" id="tin-nhan"><h2>Tin nhắn soạn sẵn</h2>' +
+      '<div class="card" id="pheu"><div class="card-head"><h2>Cập nhật số tuần này</h2><span class="right muted small">Chỉ ghi con số, không ghi tên khách</span></div>' +
+      '<div class="inline" style="margin-bottom:6px">' + FUNNEL.map(([k, l]) => '<label class="field" style="margin:0"><span>' + l + '</span><input type="number" min="0" inputmode="numeric" data-funnel="' + k + '" value="' + esc(f[k] || '') + '" placeholder="0"></label>').join('') + '</div>' +
+      '<p class="muted small" style="margin:10px 0 6px"><b>Mục tiêu mỗi tuần</b> (đặt một lần, dùng cho các tuần sau)</p>' +
+      '<div class="inline" style="margin-bottom:12px">' + FUNNEL.map(([k, l]) => '<label class="field" style="margin:0"><span class="sr">Mục tiêu ' + l + '</span><input type="number" min="0" inputmode="numeric" data-goal="' + k + '" value="' + esc(g[k] || '') + '" placeholder="mục tiêu"></label>').join('') + '</div>' +
+      '<div class="funnel" id="funnel"></div></div>' +
+      '<div class="card" id="tin-nhan"><h2>Tin nhắn soạn sẵn theo mốc</h2>' +
       '<div class="inline"><label class="field"><span>Mốc</span><select id="mstage"><option value="N0">N0 · ngay khi đăng ký</option><option value="N1">N1 · sau 1 ngày</option><option value="N3">N3 · sau 3 ngày</option><option value="N7">N7 · sau 7 ngày</option><option value="N14">N14 · chào lần cuối</option></select></label>' +
       '<label class="field"><span>Tên gọi (không lưu)</span><input type="text" id="mname" placeholder="anh Minh" autocomplete="off"></label></div>' +
       '<label class="field"><span>Điều khách băn khoăn (không lưu)</span><input type="text" id="mworry" placeholder="ví dụ: không biết bắt đầu từ đâu" autocomplete="off"></label>' +
       '<pre class="msg" id="mtext"></pre><div class="btns"><button class="btn primary" data-act="copy-msg">Copy tin nhắn</button><a class="btn ext" href="https://chat.zalo.me/" target="_blank" rel="noopener">Mở Zalo</a></div>' +
       '<p class="muted small" style="margin:10px 0 0">Ai nhắn HỦY thì ngừng nhắn và xoá thông tin khi họ yêu cầu. Chỉ nhắn người đã tự đăng ký.</p></div>' +
+      playbookCard() +
       '</div><div>' +
-      '<div class="card" id="pheu"><div class="card-head"><h2>Phễu tuần này</h2><span class="right muted small">từ ' + fmtDM(vnMs(wk, '12:00')) + '</span></div>' +
-      '<div class="inline" style="margin-bottom:12px">' + FUNNEL.map(([k, l]) => '<label class="field" style="margin:0"><span>' + l + '</span><input type="number" min="0" inputmode="numeric" data-funnel="' + k + '" value="' + esc(f[k] || '') + '" placeholder="0"></label>').join('') + '</div>' +
-      '<div class="funnel" id="funnel"></div><p class="muted small">Chỉ ghi con số tổng, không ghi tên khách.</p></div>' +
+      '<div class="card" id="link-form"><h2>Link Form đăng ký</h2><label class="field"><span>Dán link Form gửi cho khách (lưu trên máy này)</span><input type="url" id="leadformurl" value="' + esc(S.leadForm || '') + '" placeholder="https://docs.google.com/forms/d/e/..."></label>' +
+      '<p class="muted small" style="margin:0">Gắn link này vào tiểu sử TikTok, Threads, YouTube, bài ghim Facebook và bình luận đầu tiên của mỗi bài.</p></div>' +
+      '<div class="card" id="cham-diem"><div class="card-head"><h2>Chấm điểm nhanh một khách</h2></div><form id="leadform">' +
+      LEAD_Q.map((q) => '<fieldset><legend>' + esc(q.label) + '</legend><div class="choices">' + q.opts.map((o, i) => '<label><input type="' + q.type + '" name="' + q.id + '" value="' + i + '">' + esc(o[0]) + (o[1] ? ' <span class="muted">+' + o[1] + '</span>' : '') + '</label>').join('') + '</div></fieldset>').join('') +
+      '</form><div class="confirm status-big"><div><div class="muted small">Điểm</div><div class="score" id="score">0</div></div><div id="rank"></div><div class="small" id="rank-next" style="flex:1 1 200px"></div></div></div>' +
       '<div class="card" id="moc"><h2>Tính ngày follow-up</h2><label class="field"><span>Ngày khách đăng ký</span><input type="date" id="regdate" value="' + dayKey() + '"></label><ul class="list" id="moclist"></ul></div>' +
       '<div class="card" id="cac-tuan"><h2>Các tuần trước</h2>' + funnelHistory() + '</div>' +
+      (ready ? installCard(false) : '') +
       '</div></div>';
   }
   function funnelHistory() {
@@ -626,13 +798,13 @@
     const zalo = chState('zalo').url || '[link cộng đồng Zalo]';
     const disc = D.compliance.disclaimer;
     const T = {
-      N0: 'Chào ' + name + ', mình là Thiên Quốc ở kênh Đầu tư cùng Thiên Quốc. Cảm ơn ' + name + ' đã đăng ký nhận bản tin.\nTừ sáng mai, bản tin trước phiên 7h sẽ gửi trong cộng đồng Zalo: ' + zalo + '\n' + (worry ? name.charAt(0).toUpperCase() + name.slice(1) + ' có nhắc tới "' + worry + '", mình sẽ chia sẻ thêm về chủ đề này trong thời gian tới.\n' : '') + 'Có gì cần hỏi cứ nhắn mình nhé.\n' + disc,
-      N1: 'Chào ' + name + ', bản tin sáng nay ' + name + ' đọc thấy có dễ theo dõi không? ' + name.charAt(0).toUpperCase() + name.slice(1) + ' muốn mình viết thêm về chủ đề nào (vĩ mô, nhóm ngành, cách đọc báo cáo tài chính...) thì nhắn mình nhé.',
-      N3: 'Chào ' + name + ', hôm trước ' + name + ' có quan tâm ' + (worry ? '"' + worry + '"' : 'một vài chủ đề') + '. Mình gửi ' + name + ' vài ý:\n[phân tích riêng theo chủ đề họ quan tâm]\nNếu kênh YouTube đã có video đúng chủ đề: [link video]\n' + disc,
+      N0: 'Chào ' + name + ', em là Quốc ở kênh Đầu tư cùng Thiên Quốc. Cảm ơn ' + name + ' đã đăng ký nhận bản tin.\nTừ sáng mai, bản tin trước phiên 7h sẽ gửi trong cộng đồng Zalo: ' + zalo + '\n' + (worry ? name.charAt(0).toUpperCase() + name.slice(1) + ' có nhắc tới "' + worry + '", em sẽ chia sẻ thêm về chủ đề này trong thời gian tới.\n' : '') + 'Có gì cần hỏi cứ nhắn em nhé.\n' + disc,
+      N1: 'Chào ' + name + ', bản tin sáng nay ' + name + ' đọc thấy có dễ theo dõi không? ' + name.charAt(0).toUpperCase() + name.slice(1) + ' muốn em viết thêm về chủ đề nào (vĩ mô, nhóm ngành, cách đọc báo cáo tài chính...) thì nhắn em nhé.',
+      N3: 'Chào ' + name + ', hôm trước ' + name + ' có quan tâm ' + (worry ? '"' + worry + '"' : 'một vài chủ đề') + '. Em gửi ' + name + ' vài ý:\n[phân tích riêng theo chủ đề họ quan tâm]\nNếu kênh YouTube đã có video đúng chủ đề: [link video]\n' + disc,
       N7: kn === 'Chưa bắt đầu'
-        ? 'Chào ' + name + ', nếu ' + name + ' muốn bắt đầu đầu tư, mình có thể hướng dẫn từng bước mở tài khoản và đặt lệnh đầu tiên, khoảng 15 phút qua Zalo. ' + name.charAt(0).toUpperCase() + name.slice(1) + ' tiện hôm nào thì báo mình nhé.\n' + disc
-        : 'Chào ' + name + ', mình đang mở các buổi trao đổi danh mục 20 phút, miễn phí, để cùng nhìn lại tỷ trọng và mức rủi ro ' + name + ' đang chấp nhận. ' + name.charAt(0).toUpperCase() + name.slice(1) + ' tiện khung giờ nào trong tuần này?\n' + disc,
-      N14: 'Chào ' + name + ', mình nhắn lần cuối để không làm phiền. Bản tin trước phiên 7h vẫn gửi đều trong cộng đồng Zalo, ' + name + ' cần trao đổi gì cứ nhắn mình bất cứ lúc nào. Chúc ' + name + ' một tuần nhẹ nhàng!'
+        ? 'Chào ' + name + ', nếu ' + name + ' muốn bắt đầu đầu tư, em có thể hướng dẫn từng bước mở tài khoản và đặt lệnh đầu tiên, khoảng 15 phút qua Zalo. ' + name.charAt(0).toUpperCase() + name.slice(1) + ' tiện hôm nào thì báo em nhé.\n' + disc
+        : 'Chào ' + name + ', em đang mở các buổi trao đổi danh mục 20 phút, miễn phí, để cùng nhìn lại tỷ trọng và mức rủi ro ' + name + ' đang chấp nhận. ' + name.charAt(0).toUpperCase() + name.slice(1) + ' tiện khung giờ nào trong tuần này?\n' + disc,
+      N14: 'Chào ' + name + ', em nhắn lần cuối để không làm phiền. Bản tin trước phiên 7h vẫn gửi đều trong cộng đồng Zalo, ' + name + ' cần trao đổi gì cứ nhắn em bất cứ lúc nào. Chúc ' + name + ' một tuần nhẹ nhàng!'
     };
     out.textContent = T[stage];
   }
@@ -648,6 +820,7 @@
       return '<div class="fr"><span>' + l + conv + '</span><span class="fb"><i style="width:' + (v / max * 100) + '%"></i></span><span class="fv">' + v + '</span></div>';
     }).join('');
   }
+  function stripUpdate() { const fs = $('.fstrip'); if (fs) fs.outerHTML = funnelStrip(); }
   function mocUpdate() {
     const inp = $('#regdate'), ul = $('#moclist');
     if (!inp || !ul || !/^\d{4}-\d{2}-\d{2}$/.test(inp.value)) return;
@@ -788,7 +961,7 @@
       '</div></div>';
   }
   function pageNotFound() {
-    return '<div class="card"><h1>Không tìm thấy trang</h1><p><a href="#/">Về Tổng quan</a></p></div>';
+    return '<div class="card"><h1>Không tìm thấy trang</h1><p><a href="#/">Về trang Hôm nay</a></p></div>';
   }
 
   /* ---------- Định tuyến ---------- */
@@ -800,12 +973,12 @@
     if (location.hash && !location.hash.startsWith('#/')) history.replaceState(null, '', '#/');
     const { route, arg } = parse();
     renderNav(route);
-    const pages = { '': pageHome, kenh: () => pageChannel(arg), 'ket-noi': () => pageConnect(arg), lich: pageSchedule, 'dang-bai': () => pageCompose(arg), claude: pageClaude, 'tim-khach': pageLeads, 'nhat-ky': () => pageLog(arg), 'cai-dat': pageSettings };
+    const pages = { '': pageHome, kenh: () => pageChannel(arg), 'ket-noi': () => pageConnect(arg), lich: pageSchedule, doi: pageTeam, 'dang-bai': () => pageCompose(arg), claude: pageClaude, 'tim-khach': pageLeads, 'nhat-ky': () => pageLog(arg), 'cai-dat': pageSettings };
     const fn = pages[route] || pageNotFound;
     const html = fn();
     if (html === '' && route === 'ket-noi') return;
     $('#main').innerHTML = html;
-    const titles = { '': 'Tổng quan', kenh: (chById(arg) || {}).name, 'ket-noi': 'Kết nối ' + ((chById(arg) || {}).name || ''), lich: 'Lịch tự động', 'dang-bai': 'Đăng bài', claude: 'Trợ lý Claude', 'tim-khach': 'Tìm khách', 'nhat-ky': 'Nhật ký', 'cai-dat': 'Cài đặt' };
+    const titles = { '': 'Hôm nay', doi: 'Đội ngũ', kenh: (chById(arg) || {}).name, 'ket-noi': 'Kết nối ' + ((chById(arg) || {}).name || ''), lich: 'Lịch tự động', 'dang-bai': 'Đăng bài', claude: 'Trợ lý Claude', 'tim-khach': 'Phễu khách', 'nhat-ky': 'Nhật ký', 'cai-dat': 'Cài đặt' };
     document.title = (titles[route] || 'Trung tâm điều khiển') + ' · Thiên Quốc';
     if (route === 'ket-noi') { const f = $('form[data-form="connect"]'); if (f) connectPreview(f); }
     if (route === 'dang-bai') composeUpdate();
@@ -831,6 +1004,11 @@
     e.preventDefault();
     if (act === 'copy') copy(el.dataset.text);
     else if (act === 'live-refresh') liveRefresh(true);
+    else if (act === 'copy-lead-code') {
+      fetch('lead/cai-dat-lead.gs', { cache: 'no-store' }).then((r) => { if (!r.ok) throw new Error('x'); return r.text(); })
+        .then((t) => { copy(t); addLog('lead', 'Đã copy mã cài đặt Form + Sheet khách', 'info'); save(); })
+        .catch(() => toast('Không tải được mã. Kiểm tra mạng rồi bấm lại.'));
+    }
     else if (act === 'pick-method') { UI.method[el.dataset.ch] = id; rerender(); }
     else if (act === 'set-status') {
       const ch = el.dataset.ch, c = chById(ch);
@@ -970,7 +1148,9 @@
     const t = e.target;
     if (t.id === 'composer') { S.compose = t.value; save(); composeUpdate(); }
     else if (t.dataset.notes) { clearTimeout(notesTimer); notesTimer = setTimeout(() => { S.notes[t.dataset.notes] = t.value; save(); }, 400); }
-    else if (t.dataset.funnel) { const wk = weekKey(); S.funnel[wk] = S.funnel[wk] || {}; S.funnel[wk][t.dataset.funnel] = Math.max(0, parseInt(t.value, 10) || 0); save(); funnelUpdate(); }
+    else if (t.dataset.funnel) { const wk = weekKey(); S.funnel[wk] = S.funnel[wk] || {}; S.funnel[wk][t.dataset.funnel] = Math.max(0, parseInt(t.value, 10) || 0); save(); funnelUpdate(); stripUpdate(); }
+    else if (t.dataset.goal) { S.goals = S.goals || {}; S.goals[t.dataset.goal] = Math.max(0, parseInt(t.value, 10) || 0); save(); stripUpdate(); }
+    else if (t.id === 'leadformurl') { const v = t.value.trim(); if (!v || isUrl(v)) { S.leadForm = v; save(); } }
     else if (t.id === 'mname' || t.id === 'mworry') msgUpdate();
     else if (t.dataset.cf) { clSetValue(clTpl(), t.dataset.cf, t.value); clUpdate(); }
     else if (t.id === 'cl-out') clOutUpdate();
@@ -1024,6 +1204,6 @@
     liveRefresh();
     const { route } = parse();
     const busy = document.activeElement && /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName);
-    if ((route === '' || route === 'lich') && !busy) rerender();
+    if ((route === '' || route === 'lich' || route === 'doi') && !busy) rerender();
   }, 60e3);
 })();

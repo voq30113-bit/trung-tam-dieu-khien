@@ -11,7 +11,7 @@ TQ.DATA = {
   asOf: '2026-11-14',
 
   // Lần gần nhất Claude rà toàn bộ hệ thống (hiện ở ô Trạng thái trực tiếp)
-  check: { at: '2026-11-14', ok: true, text: '8 bot và 3 lịch điều hành đều chạy đủ trong 3 ngày 11–13/11. Facebook Page vẫn đăng được. YouTube, TikTok chưa kết nối. vidIQ hết credit tới 21/11.' },
+  check: { at: '2026-11-14', ok: true, text: '8 bot và 3 lịch điều hành chạy đủ 11–13/11. Bot tìm khách đổi sang bản theo văn phong. Facebook Page đăng được. YouTube, TikTok chưa kết nối. vidIQ hết credit tới 21/11.' },
 
   // Kho công khai của website: trang tự đọc lịch sử đăng bài ở đây, không cần đăng nhập
   live: { repo: 'voq30113-bit/dautucungthienquoc' },
@@ -235,10 +235,10 @@ TQ.DATA = {
     },
     {
       id: 'lead', name: 'Khách đăng ký', icon: '📋', group: 'khach',
-      desc: 'Google Form + Sheet Lead, chấm điểm và nhắc việc mỗi sáng bằng Apps Script.',
+      desc: 'Google Form + Sheet khách của riêng bạn: tự chấm điểm, nhắc nhắn khách mỗi sáng, báo cáo phễu Chủ nhật.',
       seed: { status: 'notcreated', note: 'Ngày 12/11/2026 chưa thấy Sheet "Lead – Đầu tư cùng Thiên Quốc" trên Drive.' },
       links: [
-        { label: 'Trợ lý tìm khách', url: '#/tim-khach' },
+        { label: 'Phễu khách', url: '#/tim-khach' },
         { label: 'Google Forms', url: 'https://docs.google.com/forms/u/0/' },
         { label: 'Google Sheets', url: 'https://docs.google.com/spreadsheets/u/0/' },
         { label: 'Kế hoạch hệ thống', url: 'https://claude.ai/artifact/Rw2fEfKWkXqf1sdUvGiv2a' }
@@ -248,16 +248,73 @@ TQ.DATA = {
           id: 'google', name: 'Google Form + Sheet của chính bạn', badge: 'Miễn phí',
           text: 'Dữ liệu khách nằm trong Google Drive của bạn, chỉ bạn xem được. Trang này không lưu thông tin khách.',
           steps: [
-            { title: 'Tạo Google Form', text: 'Tên: "Đăng ký nhận bản tin – Đầu tư cùng Thiên Quốc". 10 câu theo mục Form đăng ký trong kế hoạch. Có ô Đồng ý.', actions: [{ label: 'Tạo Form mới', url: 'https://forms.new' }, { label: 'Mở kế hoạch', url: 'https://claude.ai/artifact/Rw2fEfKWkXqf1sdUvGiv2a' }] },
-            { title: 'Liên kết với Sheet', text: 'Trong Form: tab Câu trả lời → Liên kết với Trang tính → Tạo bảng tính mới, đặt tên "Lead – Đầu tư cùng Thiên Quốc".' },
-            { title: 'Cài Apps Script chấm điểm', text: 'Mở Claude Code, dán Prompt 1 (prompts/01-apps-script-lead.md).' },
-            { title: 'Dán link Sheet bên dưới và xác nhận', text: 'Link chỉ lưu trên máy bạn để mở nhanh.' }
+            { title: 'Chạy bộ cài một lần', text: 'Mục Phễu khách có sẵn nút Copy mã cài đặt và hướng dẫn 4 bước. Bộ cài tự tạo Form 10 câu, Sheet khách, chấm điểm và nhắc việc.', actions: [{ label: 'Mở Phễu khách', url: '#/tim-khach' }] },
+            { title: 'Mở email "Đã cài xong hệ thống khách đăng ký"', text: 'Trong email có link Form, link Sheet khách và link bảng tổng hợp.', actions: [{ label: 'Mở Gmail', url: 'https://mail.google.com/mail/u/0/#search/subject%3A%22%C4%90%C3%A3+c%C3%A0i+xong%22' }] },
+            { title: 'Dán link Sheet khách bên dưới và xác nhận', text: 'Link chỉ lưu trên máy bạn để mở nhanh.' }
           ]
         }],
         idField: { label: 'Link Sheet Lead', placeholder: 'https://docs.google.com/spreadsheets/d/...', kind: 'url' }
       },
-      tasks: ['Tạo Google Form 10 câu', 'Liên kết Sheet Lead', 'Chạy Prompt 1 (Apps Script)', 'Gắn link Form vào website và tiểu sử các kênh']
+      tasks: ['Chạy bộ cài Form + Sheet khách', 'Tự điền thử Form một lần, xem Sheet có chấm điểm', 'Gắn link Form vào tiểu sử các kênh và bài ghim', 'Gửi link bảng tổng hợp cho Claude để agent đọc số']
     }
+  ],
+
+  // Báo cáo của agent điều hành (tệp status.json trên nhánh trang-thai của kho này). Chỉ có trạng thái bot và số đếm.
+  status: { url: 'https://raw.githubusercontent.com/voq30113-bit/trung-tam-dieu-khien/trang-thai/status.json' },
+
+  // Đội ngũ: mỗi bot là một thành viên có vai trong phễu tìm khách
+  // stage: thu-hut · nuoi · chuyen · dieu-phoi
+  team: [
+    { id: 'nghien-cuu', icon: '🔎', role: 'Săn chủ đề', kind: 'Bot trên mây + GitHub', stage: 'thu-hut', jobs: ['xu-huong', 'nghien-cuu'],
+      short: 'Tìm chủ đề người Việt đang quan tâm',
+      does: 'Mỗi sáng gom tín hiệu từ Google Xu hướng, Google Tin tức, YouTube rồi chọn 5–7 chủ đề tài chính đang được quan tâm, kèm góc khai thác.',
+      hands: 'Biên kịch video và người viết bài lấy chủ đề từ email "Chủ đề nổi bật".' },
+    { id: 'bien-kich', icon: '🎬', role: 'Biên kịch video', kind: 'Bot trên mây', stage: 'thu-hut', jobs: ['kich-ban'],
+      short: 'Kịch bản video dài T3, T5, CN',
+      does: 'Viết kịch bản 1.200–1.800 từ theo đúng văn phong, chia [PHẦN] để cắt Shorts. T3 kiến thức nền, T5 câu hỏi người xem, CN nhìn lại tuần.',
+      hands: 'Bạn thu âm và dựng. Shorts cắt ra đăng TikTok cuối tuần.' },
+    { id: 'tim-khach', icon: '🧲', role: 'Viết bài tìm khách', kind: 'Bot trên mây', stage: 'thu-hut', jobs: ['tim-khach'],
+      short: 'Bài Facebook, TikTok, Threads mỗi chiều',
+      does: 'Từ bản Tổng kết phiên, viết bài Facebook, chú thích và bình luận ghim TikTok, bài Threads, kèm câu trả lời bình luận soạn sẵn. Bài nào cũng dẫn về bản tin Zalo.',
+      hands: 'Agent điều hành rà quy tắc, gửi bạn duyệt rồi đăng.' },
+    { id: 'bien-tap', icon: '📰', role: 'Biên tập bản tin', kind: 'Bot trên mây', stage: 'nuoi', jobs: ['diem-tin', 'nhan-dinh', 'tong-ket', 'vi-mo'],
+      short: 'Điểm tin, nhận định, tổng kết, vĩ mô',
+      does: 'Bốn bản tin đều đặn: điểm tin và nhận định trước phiên 7h, tổng kết phiên 16h30, báo cáo vĩ mô tối Chủ nhật. Đây là lý do người đăng ký ở lại.',
+      hands: 'Bạn copy vào cộng đồng Zalo. Quản trị website đưa lên web.' },
+    { id: 'web', icon: '🌐', role: 'Quản trị website', kind: 'Bot trên mây', stage: 'nuoi', jobs: ['web'],
+      short: 'Đưa bản tin lên website 3 lần mỗi ngày',
+      does: 'Lấy bản tin từ email, chuyển sang giọng website và đăng lên GitHub Pages. Người tìm trên Google thấy kênh qua đây.',
+      hands: 'Trang này tự đọc lịch sử đăng bài để xác nhận các bot bản tin đã chạy.' },
+    { id: 'cskh', icon: '🤝', role: 'Chăm khách đăng ký', kind: 'Apps Script trong Google của bạn', stage: 'chuyen', jobs: [], needs: 'lead',
+      short: 'Chấm điểm, nhắc nhắn khách, báo cáo phễu',
+      does: 'Có người điền Form là chấm điểm Nóng / Ấm / Lạnh. 8h sáng gửi danh sách cần nhắn kèm tin soạn sẵn đúng mốc N0, N1, N3, N7, N14. 19h Chủ nhật gửi báo cáo phễu.',
+      hands: 'Bạn nhắn Zalo và đổi cột Trạng thái trong Sheet.', go: ['Mở Phễu khách', '#/tim-khach'] },
+    { id: 'bean', icon: '👤', role: 'Thiên Quốc: tư vấn và chốt', kind: 'Con người', stage: 'chuyen', jobs: [], human: true,
+      short: 'Duyệt bài, quay video, nói chuyện với khách',
+      does: 'Việc chỉ bạn làm được: duyệt bài có số liệu, quay và thu âm, nhắn khách đúng mốc, buổi trao đổi danh mục 20 phút, hướng dẫn mở tài khoản.',
+      hands: 'Mỗi tuần nhập số vào Phễu khách để cả đội biết kênh nào ra khách.', go: ['Xem việc hôm nay', '#/'] },
+    { id: 'dieu-hanh', icon: '🧭', role: 'Agent điều hành', kind: 'Bot trên mây', stage: 'dieu-phoi', jobs: ['dh-sang', 'dh-chieu', 'dh-duyet'],
+      short: 'Kiểm tra cả đội, soạn bài, đăng bài',
+      does: 'Sáng kiểm tra từng bot, soạn bài trong ngày, gửi email [Điều hành]. Đọc thư trả lời DUYỆT / SỬA / BỎ rồi đăng Facebook. Chủ nhật nhìn lại tuần và đề xuất kế hoạch nội dung tuần sau.',
+      hands: 'Ghi báo cáo lên trang này sau mỗi lần chạy.' }
+  ],
+
+  // Câu trả lời mẫu cho các câu khách hay hỏi (xưng em, gọi anh chị). Sửa cho hợp từng người trước khi gửi.
+  playbook: [
+    { q: '"Có mã nào ngon không em?"', aim: 'Mục tiêu: không khuyến nghị, chuyển sang hiểu nhu cầu của khách.',
+      a: 'Dạ em không đưa mã cụ thể vì mỗi người một mức vốn, một khoảng thời gian và một mức chịu rủi ro khác nhau, cùng một mã có thể hợp với người này mà không hợp với người kia. Anh chị cho em hỏi: khoản này anh chị định để bao lâu, và nếu tài khoản giảm 15% thì anh chị thấy thế nào ạ? Em dựa vào đó gợi ý cách nhìn nhóm ngành và các yếu tố nên theo dõi.' },
+    { q: '"Em còn trẻ, làm sao anh tin được?"', aim: 'Mục tiêu: thừa nhận phần có lý, trả lời bằng việc làm.',
+      a: 'Dạ anh chị nghi ngờ là đúng ạ, em cũng không nghĩ tuổi nghề của em đủ để anh chị tin ngay. Em chỉ xin anh chị đọc bản tin 7h của em vài tuần, xem em nói gì khi thị trường xấu và em có nhận sai khi nhận định lệch không. Thấy hợp thì mình nói chuyện tiếp, không hợp anh chị cứ bỏ qua ạ.' },
+    { q: '"Anh có tài khoản chỗ khác rồi."', aim: 'Mục tiêu: không ép chuyển, giữ quan hệ qua bản tin.',
+      a: 'Dạ vậy tốt quá ạ, anh chị cứ dùng nơi đang quen. Bản tin trước phiên của em thì anh chị ở đâu cũng dùng được. Khi nào anh chị muốn có thêm một người cùng nhìn lại danh mục thì nhắn em, em trao đổi 20 phút, không ràng buộc gì ạ.' },
+    { q: '"Tài khoản anh đang lỗ nặng, giờ làm sao?"', aim: 'Mục tiêu: không an ủi, không phán mã, đưa về việc nhìn lại cấu trúc danh mục.',
+      a: 'Dạ em hiểu, lúc tài khoản âm sâu thì quyết định nào cũng khó. Em không nói được mã đó sẽ lên hay xuống. Việc em làm được là cùng anh chị nhìn lại ba thứ: tỷ trọng từng mã, có đang dùng vay ký quỹ không, và lý do ban đầu anh chị mua còn đúng không. Anh chị tiện thì em sắp 20 phút trong tuần này ạ.' },
+    { q: '"Phí bên em bao nhiêu? Có ưu đãi gì không?"', aim: 'Mục tiêu: trả lời đúng biểu phí hiện hành, không hứa ngoài thẩm quyền. Chỉ trả lời qua tin nhắn riêng.',
+      a: 'Dạ em gửi anh chị biểu phí hiện hành: [dán biểu phí giao dịch và lãi vay đang áp dụng, CẦN KIỂM TRA trước khi gửi]. Phí là một phần thôi ạ, phần em nghĩ đáng cân nhắc hơn là anh chị có người theo sát và trả lời khi cần hay không.' },
+    { q: '"Để anh suy nghĩ thêm."', aim: 'Mục tiêu: tôn trọng, để ngỏ, hẹn một mốc cụ thể.',
+      a: 'Dạ vâng ạ, anh chị cứ thong thả. Bản tin sáng em vẫn gửi đều trong cộng đồng. Khoảng một tuần nữa em nhắn hỏi thăm một lần, nếu anh chị chưa cần thì em không làm phiền thêm ạ.' },
+    { q: '"Giờ có nên vào thị trường không em?"', aim: 'Mục tiêu: không dự báo, đưa khung tự đánh giá.',
+      a: 'Dạ em không biết trước thị trường sẽ đi đâu, và em nghĩ không ai biết chắc ạ. Câu em hay hỏi ngược lại là: khoản tiền này anh chị không cần dùng trong bao lâu, và anh chị định vào một lần hay chia nhiều lần? Trả lời được hai câu đó thì thời điểm bớt quan trọng đi nhiều. Em gửi anh chị bài em viết về cách chia vốn nhé.' }
   ],
 
   // Việc tự động trên mây (giờ Việt Nam). days: 0 = Chủ nhật ... 6 = Thứ Bảy

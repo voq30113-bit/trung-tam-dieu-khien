@@ -117,8 +117,11 @@
   function tileLine(id) {
     const c = chById(id), st = chState(id);
     if (id === 'email') { const r = todayJobs('email'); return 'Hôm nay đã nhận ' + r.seen + '/' + r.due + ' bản tin tới giờ'; }
-    if (id === 'website') { const j = D.jobs.find((x) => x.id === 'web'); return 'Lần đăng tới: ' + fmtHM(nextRun(j)) + ' (' + rel(nextRun(j)) + ')'; }
-    if (c.workflow) { const s = c.steps.find((x) => !(S.video[weekKey()] || {})[x.id]); return s ? 'Bước tiếp: ' + s.text : 'Đã xong cả 5 bước tuần này'; }
+    if (id === 'website') {
+      const j = D.jobs.find((x) => x.id === 'web'), pub = liveSummary().pub;
+      return (pub ? 'Đăng gần nhất ' + fmtFull(pub.t) + ' · ' : '') + 'Lần tới: ' + fmtHM(nextRun(j)) + ' (' + rel(nextRun(j)) + ')';
+    }
+    if (c.workflow) { const s = c.steps.find((x) => !(S.video[weekKey()] || {})[x.id]); return s ? 'Bước tiếp: ' + s.text : 'Đã xong mọi bước tuần này'; }
     if (needsAction(st.status)) return id === 'lead' ? 'Bấm "Chưa tạo" để làm theo từng bước' : 'Bấm "Chưa kết nối" để đăng nhập và kết nối';
     if (st.status === 'manual' && !st.handle && !st.url) return 'Tự đăng · bấm để lưu tài khoản';
     const parts = [];
@@ -140,18 +143,93 @@
     return null;
   }
   function occurrences(job, key) {
-    if (!job.days.includes(weekdayOf(key))) return [];
+    if (job.quiet || !job.days.includes(weekdayOf(key))) return []; // quiet: việc chạy ngầm, không có gì để "nhận"
     return job.times.map((t) => ({ job, key, time: t, ms: vnMs(key, t), id: job.id + '@' + t }));
   }
   function todayJobs(channel) {
     const k = dayKey();
-    const seen = S.jobsSeen[k] || {};
     let due = 0, cnt = 0;
     for (const j of D.jobs) {
       if (channel && j.channel !== channel) continue;
-      for (const o of occurrences(j, k)) if (o.ms <= now()) { due++; if (seen[o.id]) cnt++; }
+      for (const o of occurrences(j, k)) if (o.ms <= now()) { due++; if (seenInfo(o)) cnt++; }
     }
     return { due, seen: cnt };
+  }
+
+  /* ---------- Trạng thái trực tiếp: đọc lịch sử đăng bài công khai của website trên GitHub ---------- */
+  // Không cần đăng nhập. Website chỉ đăng được khi bản tin đã về, nên một bài lên web = bot đó đã chạy.
+  const LIVE_KEY = 'tq-live-v1', LIVE_TTL = 10 * 60e3;
+  let LIVE = { at: 0, tried: 0, commits: [], runs: [], err: '' };
+  try { const raw = localStorage.getItem(LIVE_KEY); if (raw) LIVE = Object.assign(LIVE, JSON.parse(raw), { err: '' }); } catch (e) { /* bỏ qua */ }
+  let liveBusy = false;
+  async function liveRefresh(force) {
+    const L = D.live;
+    if (!L || liveBusy || (!force && now() - Math.max(LIVE.at, LIVE.tried) < LIVE_TTL)) return;
+    liveBusy = true;
+    try {
+      const api = 'https://api.github.com/repos/' + L.repo;
+      const [c, r] = await Promise.all([fetch(api + '/commits?per_page=60'), fetch(api + '/actions/runs?per_page=12')]);
+      if (!c.ok || !r.ok) throw new Error((c.status === 403 || r.status === 403 || c.status === 429 || r.status === 429) ? 'GitHub tạm giới hạn lượt đọc, thử lại sau ít phút.' : 'GitHub trả lỗi ' + (c.ok ? r.status : c.status) + '.');
+      const cj = await c.json(), rj = await r.json();
+      LIVE = {
+        at: now(), tried: now(), err: '',
+        commits: (Array.isArray(cj) ? cj : []).map((x) => ({ t: Date.parse(x.commit.committer.date), m: String(x.commit.message).split('\n')[0].slice(0, 120) })),
+        runs: ((rj && rj.workflow_runs) || []).map((x) => ({ t: Date.parse(x.created_at), n: String(x.name), s: String(x.status), c: String(x.conclusion), u: String(x.html_url) }))
+      };
+      try { localStorage.setItem(LIVE_KEY, JSON.stringify(LIVE)); } catch (e) { /* bỏ qua */ }
+      if (force) toast('Đã đọc lại từ GitHub');
+    } catch (e) {
+      LIVE.err = (e && e.message && /GitHub/.test(e.message)) ? e.message : 'Không đọc được GitHub (kiểm tra mạng).';
+      LIVE.tried = now();
+    }
+    liveBusy = false;
+    const { route } = parse();
+    const busy = document.activeElement && /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName);
+    if ((route === '' || route === 'lich') && !busy) rerender();
+  }
+  // Bằng chứng một lần chạy đã ra kết quả: có commit đúng loại trên website sau giờ chạy
+  function liveProof(o) {
+    const p = o.job.proof;
+    if (!p || !LIVE.commits.length) return null;
+    const end = o.ms + (o.job.proofHours || 14) * H;
+    const hits = LIVE.commits.filter((c) => c.t >= o.ms - 10 * 60e3 && c.t <= end && c.m.indexOf(p) === 0);
+    return hits.length ? hits[hits.length - 1].t : null; // commit sớm nhất
+  }
+  function seenInfo(o) {
+    const manual = (S.jobsSeen[o.key] || {})[o.id];
+    if (manual) return { at: Date.parse(manual), auto: false };
+    const t = liveProof(o);
+    return t ? { at: t, auto: true } : null;
+  }
+  const CONTENT_NAMES = { 'diem-tin': 'Điểm tin', 'nhan-dinh': 'Nhận định', 'tong-ket': 'Tổng kết phiên', 'bao-cao': 'Báo cáo' };
+  function liveSummary() {
+    const pub = LIVE.commits.find((c) => c.m.indexOf('content: publish') === 0);
+    const dep = LIVE.runs.find((r) => r.n === 'Deploy');
+    const k = dayKey();
+    const today = [];
+    for (const c of LIVE.commits) {
+      const m = /^content\(([a-z-]+)\)/.exec(c.m);
+      if (m && dayKey(c.t) === k) { const n = CONTENT_NAMES[m[1]] || m[1]; if (!today.includes(n)) today.unshift(n); }
+    }
+    const depState = !dep ? null : dep.s !== 'completed' ? 'run' : dep.c === 'success' ? 'ok' : 'bad';
+    return { pub, dep, depState, today };
+  }
+  function liveCard() {
+    if (!D.live) return '';
+    const s = liveSummary();
+    const rows = [];
+    if (D.check) rows.push('<li><span class="dot ' + (D.check.ok ? 'ok' : 'warn') + '"></span><div class="body"><b>Claude kiểm tra ngày ' + fmtDate(D.check.at) + '</b><div class="tag">' + esc(D.check.text) + '</div></div></li>');
+    if (LIVE.at) {
+      rows.push('<li><span class="dot ' + (s.pub ? 'ok' : 'info') + '"></span><div class="body"><b>Website: lần đăng gần nhất</b><div class="tag">' + (s.pub ? fmtFull(s.pub.t) + ' (' + rel(s.pub.t) + ')' : 'Chưa thấy lần đăng nào gần đây') + '</div></div></li>');
+      if (s.dep) {
+        const u = s.dep.u.indexOf('https://github.com/') === 0 ? s.dep.u : D.links.websiteActions;
+        rows.push('<li><span class="dot ' + ({ ok: 'ok', bad: 'bad', run: 'info' }[s.depState]) + '"></span><div class="body"><b>' + ({ ok: 'Website lên sóng thành công', bad: 'Website đăng bị lỗi', run: 'Website đang cập nhật' }[s.depState]) + '</b><div class="tag">' + fmtFull(s.dep.t) + (s.depState === 'bad' ? ' · Nhắn Claude Code kèm ảnh chụp trang lỗi' : '') + '</div></div><a class="btn small ext" href="' + esc(u) + '" target="_blank" rel="noopener">Xem</a></li>');
+      }
+      rows.push('<li><span class="dot ' + (s.today.length ? 'ok' : 'info') + '"></span><div class="body"><b>Hôm nay đã lên website</b><div class="tag">' + (s.today.length ? esc(s.today.join(' · ')) : 'Chưa có bài nào hôm nay') + '</div></div></li>');
+    }
+    const foot = LIVE.err ? '<span class="dot warn"></span> ' + esc(LIVE.err) : LIVE.at ? 'Tự đọc từ GitHub lúc ' + fmtHM(LIVE.at) + ', 10 phút đọc lại một lần.' : 'Đang đọc từ GitHub…';
+    return '<div class="card" id="truc-tiep"><div class="card-head"><h2>Trạng thái trực tiếp</h2><button class="btn small right" data-act="live-refresh" type="button">Làm mới</button></div>' +
+      '<ul class="list">' + rows.join('') + '</ul><p class="muted small">' + foot + '</p></div>';
   }
   const gmailSearch = (subject) => 'https://mail.google.com/mail/u/0/#search/' + encodeURIComponent('subject:"' + subject + '" newer_than:2d');
 
@@ -219,12 +297,13 @@
       '<div class="stats">' +
       '<a class="stat" href="#cac-kenh"><div class="label">Kênh sẵn sàng</div><div class="value">' + ready + '<small> / ' + totalCh + '</small></div><div class="bar"><i style="width:' + pct(ready, totalCh) + '%"></i></div></a>' +
       '<a class="stat" href="#viec-hom-nay"><div class="label">Việc tay hôm nay</div><div class="value">' + doneN + '<small> / ' + items.length + '</small></div><div class="bar"><i style="width:' + pct(doneN, items.length) + '%"></i></div></a>' +
-      '<a class="stat" href="#/lich"><div class="label">Bản tin tự động hôm nay</div><div class="value">' + jt.seen + '<small> / ' + jt.due + ' tới giờ</small></div><div class="hint">Bấm "Đã nhận" ở Lịch tự động</div></a>' +
+      '<a class="stat" href="#/lich"><div class="label">Bản tin tự động hôm nay</div><div class="value">' + jt.seen + '<small> / ' + jt.due + ' tới giờ</small></div><div class="hint">Bài lên website được tự xác nhận</div></a>' +
       '<a class="stat" href="#/dang-bai"><div class="label">Bài nháp chưa đăng</div><div class="value">' + pendingDrafts + '</div><div class="hint">Mở mục Đăng bài</div></a>' +
       '</div>' +
       '<div class="grid2"><div id="cac-kenh">' + tiles + '</div><div>' +
       (todo.length ? '<div class="card" id="can-xu-ly"><div class="card-head"><h2>Cần xử lý</h2></div><ul class="list">' +
         todo.map((c) => '<li><span class="dot warn"></span><div class="body"><b>' + c.icon + ' ' + esc(c.name) + '</b><div class="tag">' + esc(chState(c.id).note || c.desc) + '</div></div><a class="btn small primary" href="#/ket-noi/' + c.id + '">' + (c.id === 'lead' ? 'Tạo' : 'Kết nối') + '</a></li>').join('') + '</ul></div>' : '') +
+      liveCard() +
       '<div class="card" id="viec-hom-nay"><div class="card-head"><h2>Việc hôm nay</h2><span class="right muted small">' + WD_LONG[weekdayOf(k)] + '</span></div>' +
       (items.length ? items.map((x) => checkRow('toggle-daily', x.id, x.text, doneMap[x.id], x.time, x.go)).join('') : '<p class="empty">Hôm nay không có việc tay. Nghỉ ngơi nhé!</p>') + '</div>' +
       '<div class="card" id="sap-chay"><div class="card-head"><h2>Sắp chạy tự động</h2><a class="right small" href="#/lich">Xem lịch</a></div><ul class="list">' +
@@ -237,7 +316,7 @@
     return '<label class="check' + (done ? ' done' : '') + '"><input type="checkbox" data-act="' + act + '" data-id="' + esc(id) + '"' + (extra || '') + (done ? ' checked' : '') + '>' +
       '<span class="t">' + esc(text) + (done ? '<br><span class="when">Xong lúc ' + fmtFull(done) + '</span>' : '') + '</span>' +
       (when ? '<span class="when">' + esc(when) + '</span>' : '') +
-      (go ? '<a href="' + esc(go) + '">Làm ›</a>' : '') + '</label>';
+      (go ? '<a href="' + esc(go) + '"' + (go.indexOf('https://') === 0 ? ' target="_blank" rel="noopener"' : '') + '>Làm ›</a>' : '') + '</label>';
   }
 
   function logList(rows, empty) {
@@ -367,29 +446,29 @@
   /* ---------- Trang: Lịch tự động ---------- */
   function pageSchedule() {
     const k = dayKey();
-    const seen = S.jobsSeen[k] || {};
     const occ = D.jobs.flatMap((j) => occurrences(j, k)).sort((a, b) => a.ms - b.ms);
     const rate = (j) => {
       let due = 0, got = 0;
       for (let i = 0; i < 7; i++) {
         const key = addDays(k, -i);
-        for (const o of occurrences(j, key)) if (o.ms <= now()) { due++; if ((S.jobsSeen[key] || {})[o.id]) got++; }
+        for (const o of occurrences(j, key)) if (o.ms <= now()) { due++; if (seenInfo(o)) got++; }
       }
       return { due, got };
     };
-    return '<div class="pagehead"><div class="grow"><h1>Lịch tự động</h1><p>Các việc Claude chạy trên mây theo giờ Việt Nam. Thấy email về thì bấm <b>Đã nhận</b> để theo dõi việc nào hay bị trễ.</p></div>' +
+    return '<div class="pagehead"><div class="grow"><h1>Lịch tự động</h1><p>Các việc Claude chạy trên mây theo giờ Việt Nam. Bản tin nào đã lên website thì trang <b>tự xác nhận</b>. Các việc còn lại, thấy email về thì bấm <b>Đã nhận</b>.</p></div>' +
       '<div class="btns"><a class="btn ext" href="' + D.links.claudeDashboard + '" target="_blank" rel="noopener">Bảng tự đọc Gmail (Claude)</a></div></div>' +
       '<div class="grid2"><div><div class="card" id="hom-nay"><div class="card-head"><h2>Hôm nay · ' + WD_LONG[weekdayOf(k)] + ' ' + fmtDM(now()) + '</h2></div>' +
       (occ.length ? '<ul class="list">' + occ.map((o) => {
-        const past = o.ms <= now(), got = seen[o.id];
+        const past = o.ms <= now(), got = seenInfo(o);
         const dot = got ? 'ok' : past ? 'warn' : 'info';
-        const right = got ? '<span class="pill k-ok">Đã nhận ' + fmtHM(Date.parse(got)) + '</span>' :
+        const right = got ? '<span class="pill k-ok" title="' + (got.auto ? 'Trang tự thấy bài này trên website' : 'Bạn đã bấm Đã nhận') + '">' + (got.auto ? 'Tự xác nhận ' : 'Đã nhận ') + fmtHM(got.at) + '</span>' :
           past ? '<button class="btn small" data-act="seen-job" data-id="' + esc(o.id) + '">Đã nhận</button>' : '<span class="muted small">' + rel(o.ms) + '</span>';
-        return '<li><span class="dot ' + dot + '"></span><time>' + o.time + '</time><div class="body">' + esc(o.job.name) + '<div class="tag"><a href="' + gmailSearch(o.job.subject) + '" target="_blank" rel="noopener">Tìm trong Gmail ↗</a></div></div>' + right + '</li>';
+        const link = o.job.link ? '<a href="' + esc(o.job.link) + '" target="_blank" rel="noopener">' + esc(o.job.linkLabel || 'Mở') + ' ↗</a>' : '<a href="' + gmailSearch(o.job.subject) + '" target="_blank" rel="noopener">Tìm trong Gmail ↗</a>';
+        return '<li><span class="dot ' + dot + '"></span><time>' + o.time + '</time><div class="body">' + esc(o.job.name) + '<div class="tag">' + link + '</div></div>' + right + '</li>';
       }).join('') + '</ul>' : '<p class="empty">Hôm nay không có việc tự động.</p>') + '</div></div>' +
       '<div><div class="card" id="ca-tuan"><h2>Cả tuần</h2><div class="tablewrap"><table><thead><tr><th>Việc</th><th>Lịch</th><th>Lần tới</th><th>7 ngày</th></tr></thead><tbody>' +
       D.jobs.map((j) => { const r = rate(j); return '<tr><td>' + esc(j.name) + '</td><td class="nowrap">' + (j.days.length === 7 ? 'Mỗi ngày' : j.days.map((d) => WD[d]).join(' ')) + '<br><span class="muted small">' + j.times.join(', ') + '</span></td><td class="nowrap">' + fmtFull(nextRun(j)) + '</td><td class="nowrap num">' + (r.due ? r.got + '/' + r.due : '—') + '</td></tr>'; }).join('') +
-      '</tbody></table></div><p class="muted small">Cột 7 ngày: số lần bạn bấm Đã nhận trên số lần tới lịch. Ngày lễ thị trường nghỉ có thể không có bản tin.</p></div></div></div>';
+      '</tbody></table></div><p class="muted small">Cột 7 ngày: số lần đã nhận (tự xác nhận hoặc bạn bấm) trên số lần tới lịch. Dấu — là việc chạy ngầm, không gửi gì để nhận. Website không có bài mới thì không đăng, nên đôi khi lượt 21h45 trống là bình thường. Ngày lễ thị trường nghỉ có thể không có bản tin.</p></div>' + liveCard() + '</div></div>';
   }
 
   /* ---------- Trang: Đăng bài ---------- */
@@ -751,6 +830,7 @@
     if (el.tagName === 'INPUT') return; // checkbox xử lý ở change
     e.preventDefault();
     if (act === 'copy') copy(el.dataset.text);
+    else if (act === 'live-refresh') liveRefresh(true);
     else if (act === 'pick-method') { UI.method[el.dataset.ch] = id; rerender(); }
     else if (act === 'set-status') {
       const ch = el.dataset.ch, c = chById(ch);
@@ -938,8 +1018,10 @@
   applyTheme();
   renderClock();
   render();
+  liveRefresh();
   setInterval(() => {
     renderClock();
+    liveRefresh();
     const { route } = parse();
     const busy = document.activeElement && /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName);
     if ((route === '' || route === 'lich') && !busy) rerender();

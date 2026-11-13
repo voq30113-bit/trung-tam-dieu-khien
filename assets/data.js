@@ -8,7 +8,13 @@ window.TQ = window.TQ || {};
 
 TQ.DATA = {
   // Ngày Claude kiểm tra thực tế các kết nối lần gần nhất (dùng làm trạng thái ban đầu)
-  asOf: '2026-11-12',
+  asOf: '2026-11-14',
+
+  // Lần gần nhất Claude rà toàn bộ hệ thống (hiện ở ô Trạng thái trực tiếp)
+  check: { at: '2026-11-14', ok: true, text: '8 bot và 3 lịch điều hành đều chạy đủ trong 3 ngày 11–13/11. Facebook Page vẫn đăng được. YouTube, TikTok chưa kết nối. vidIQ hết credit tới 21/11.' },
+
+  // Kho công khai của website: trang tự đọc lịch sử đăng bài ở đây, không cần đăng nhập
+  live: { repo: 'voq30113-bit/dautucungthienquoc' },
 
   links: {
     website: 'https://voq30113-bit.github.io/dautucungthienquoc/',
@@ -26,7 +32,7 @@ TQ.DATA = {
   channels: [
     {
       id: 'email', name: 'Bản tin email', icon: '✉️', group: 'auto',
-      desc: 'Sáu việc tự động trên mây gửi bản tin về hộp thư Gmail của bạn mỗi ngày.',
+      desc: 'Các bot trên mây gửi bản tin, chủ đề nổi bật, kịch bản và email [Điều hành] về hộp thư Gmail của bạn mỗi ngày.',
       seed: { status: 'connected', method: 'claude', handle: 'Gmail', note: 'Claude chạy theo lịch, gửi về hộp thư của bạn.' },
       links: [
         { label: 'Mở Gmail', url: 'https://mail.google.com/mail/u/0/#inbox' },
@@ -43,7 +49,7 @@ TQ.DATA = {
         }],
         idField: { label: 'Tên hộp thư (ghi chú cho bạn)', placeholder: 'Gmail cá nhân', kind: 'text' }
       },
-      tasks: ['Đọc Điểm tin sáng trước 7h30', 'Đọc Tổng kết phiên sau 16h30', 'Đọc Báo cáo vĩ mô tối Chủ nhật']
+      tasks: ['Đọc email [Điều hành] 7h15 và trả lời DUYỆT / SỬA / BỎ', 'Đọc Tổng kết phiên sau 16h30', 'Đọc Báo cáo vĩ mô tối Chủ nhật']
     },
     {
       id: 'website', name: 'Website', icon: '🌐', group: 'auto',
@@ -119,7 +125,7 @@ TQ.DATA = {
     },
     {
       id: 'facebook', name: 'Facebook Page', icon: '📘', group: 'social', platform: 'FACEBOOK_PAGES',
-      desc: 'Page "Đầu tư cùng Thiên Quốc". Bài tìm khách soạn sẵn lúc 17h25.',
+      desc: 'Page "Đầu tư cùng Thiên Quốc". Bài kiến thức 20h Claude tự đăng. Bài có số liệu (7h30, 18h) chờ bạn trả lời DUYỆT trong email [Điều hành].',
       seed: { status: 'connected', method: 'vidiq', handle: 'Đầu tư cùng Thiên Quốc', url: 'https://www.facebook.com/profile.php?id=735658762958605', note: 'Đã nối vidIQ, đăng được (kiểm tra 12/11/2026).' },
       links: [
         { label: 'Mở Page', url: 'https://www.facebook.com/profile.php?id=735658762958605' },
@@ -139,7 +145,7 @@ TQ.DATA = {
           },
           {
             id: 'vidiq', name: 'Tự động: Claude đăng (qua vidIQ)', badge: 'Đang dùng',
-            text: 'Nhắn Claude "đăng bài Facebook hôm nay": Claude lấy bài từ email 17h25, cho bạn xem, bạn đồng ý thì đăng.',
+            text: 'Claude soạn bài và gửi trong email [Điều hành]. Bạn trả lời DUYỆT 1 3, SỬA 2: ..., hoặc BỎ 4. Bài chưa duyệt kịp thì không đăng.',
             steps: [
               { title: 'Nếu báo cần kết nối lại', text: 'Copy câu dưới gửi Claude, bấm nút Claude gửi lại, đăng nhập Facebook, tick đúng Page.', copy: 'Kết nối lại Facebook Page "Đầu tư cùng Thiên Quốc" với vidIQ', actions: [{ label: 'Mở Claude', url: 'https://claude.ai/new' }] },
               { title: 'Xác nhận bên dưới' }
@@ -186,7 +192,7 @@ TQ.DATA = {
     },
     {
       id: 'threads', name: 'Threads', icon: '🧵', group: 'social', platform: 'THREADS',
-      desc: 'Mỗi ngày giao dịch có 2 bài Threads soạn sẵn trong email 17h25.',
+      desc: 'Mỗi ngày giao dịch có 3 bài Threads soạn sẵn (12h thị trường, 18h tổng kết, 20h30 kiến thức). Bạn bấm đăng.',
       seed: { status: 'manual', method: 'tu-chu', note: 'Công cụ đăng tự động chưa hỗ trợ Threads. Dùng mục Đăng bài: một nút mở Threads với bài đã điền sẵn.' },
       links: [
         { label: 'Mở Threads', url: 'https://www.threads.net/' },
@@ -208,7 +214,7 @@ TQ.DATA = {
     },
     {
       id: 'zalo', name: 'Zalo', icon: '💬', group: 'social',
-      desc: 'Cộng đồng "Đầu tư cùng Thiên Quốc – Bản tin sáng". Gửi bản tin 7h mỗi sáng.',
+      desc: 'Cộng đồng "Đầu tư cùng Thiên Quốc – Bản tin sáng". Gửi nhận định 7h05 và tổng kết phiên 17h30.',
       seed: { status: 'manual', method: 'tu-chu', note: 'Zalo không cho công cụ bên ngoài đăng thay. Copy bản tin 7h từ mục Đăng bài rồi dán.' },
       links: [
         { label: 'Zalo trên web', url: 'https://chat.zalo.me/' },
@@ -256,23 +262,35 @@ TQ.DATA = {
 
   // Việc tự động trên mây (giờ Việt Nam). days: 0 = Chủ nhật ... 6 = Thứ Bảy
   jobs: [
-    { id: 'diem-tin', name: 'Điểm tin sáng', channel: 'email', days: [1, 2, 3, 4, 5], times: ['07:00'], subject: 'Điểm tin tài chính ngày' },
-    { id: 'nhan-dinh', name: 'Nhận định trước phiên', channel: 'email', days: [1, 2, 3, 4, 5], times: ['07:00'], subject: 'Nhận định trước phiên' },
-    { id: 'tong-ket', name: 'Tổng kết phiên', channel: 'email', days: [1, 2, 3, 4, 5], times: ['16:30'], subject: 'Tổng kết phiên' },
-    { id: 'tim-khach', name: 'Nội dung tìm khách (FB · TikTok · Threads)', channel: 'email', days: [1, 2, 3, 4, 5], times: ['17:25'], subject: 'Nội dung tìm khách' },
+    // proof: bài cùng loại xuất hiện trên website sau giờ chạy thì trang tự xác nhận là bot đã chạy
+    // quiet: việc chạy ngầm, không gửi gì để nhận (chỉ hiện ở bảng Cả tuần)
+    { id: 'xu-huong', name: 'Thu tín hiệu xu hướng (GitHub)', channel: 'email', days: [0, 1, 2, 3, 4, 5, 6], times: ['03:17'], quiet: true },
+    { id: 'nghien-cuu', name: 'Chủ đề nổi bật', channel: 'email', days: [0, 1, 2, 3, 4, 5, 6], times: ['06:00'], subject: 'Chủ đề nổi bật' },
     { id: 'kich-ban', name: 'Kịch bản video dài', channel: 'video', days: [0, 2, 4], times: ['06:30'], subject: 'Kịch bản video tuần' },
-    { id: 'vi-mo', name: 'Báo cáo vĩ mô tuần', channel: 'email', days: [0], times: ['20:00'], subject: 'Báo cáo vĩ mô' },
-    { id: 'web', name: 'Đăng bài lên website', channel: 'website', days: [0, 1, 2, 3, 4, 5, 6], times: ['07:45', '17:45', '21:45'], subject: 'Đã đăng website' }
+    { id: 'diem-tin', name: 'Điểm tin sáng', channel: 'email', days: [1, 2, 3, 4, 5], times: ['07:00'], subject: 'Điểm tin tài chính ngày', proof: 'content(diem-tin)' },
+    { id: 'nhan-dinh', name: 'Nhận định trước phiên', channel: 'email', days: [1, 2, 3, 4, 5], times: ['07:00'], subject: 'Nhận định trước phiên', proof: 'content(nhan-dinh)' },
+    { id: 'dh-sang', name: 'Điều hành sáng: kiểm tra bot, soạn bài', channel: 'email', days: [0, 1, 2, 3, 4, 5, 6], times: ['07:15'], subject: '[Điều hành]' },
+    { id: 'dh-duyet', name: 'Điều hành duyệt: đọc thư trả lời, đăng bài', channel: 'email', days: [0, 1, 2, 3, 4, 5, 6], times: ['07:40', '08:40', '11:40', '18:40', '19:40'], quiet: true },
+    { id: 'tong-ket', name: 'Tổng kết phiên', channel: 'email', days: [1, 2, 3, 4, 5], times: ['16:30'], subject: 'Tổng kết phiên', proof: 'content(tong-ket)' },
+    { id: 'tim-khach', name: 'Nội dung tìm khách (FB · TikTok · Threads)', channel: 'email', days: [1, 2, 3, 4, 5], times: ['17:25'], subject: 'Nội dung tìm khách' },
+    { id: 'dh-chieu', name: 'Điều hành chiều: bài tổng kết chờ duyệt', channel: 'email', days: [1, 2, 3, 4, 5], times: ['17:40'], subject: '[Điều hành]' },
+    { id: 'vi-mo', name: 'Báo cáo vĩ mô tuần', channel: 'email', days: [0], times: ['20:00'], subject: 'Báo cáo vĩ mô', proof: 'content(bao-cao)', proofHours: 40 },
+    { id: 'web', name: 'Đăng bài lên website', channel: 'website', days: [0, 1, 2, 3, 4, 5, 6], times: ['07:45', '17:45', '21:45'], proof: 'content: publish', proofHours: 2.5, link: 'https://github.com/voq30113-bit/dautucungthienquoc/actions', linkLabel: 'Xem trên GitHub' }
   ],
 
-  // Việc tay mỗi ngày (tự làm mới mỗi ngày)
+  // Việc tay mỗi ngày (tự làm mới mỗi ngày), theo lịch đăng bài chốt 12/11/2026
   daily: [
     { id: 'zalo-7h', time: '07:05', text: 'Copy Nhận định trước phiên vào cộng đồng Zalo', channel: 'zalo', days: [1, 2, 3, 4, 5], go: '#/dang-bai' },
+    { id: 'duyet-sang', time: '07:20', text: 'Đọc email [Điều hành] sáng, trả lời DUYỆT / SỬA / BỎ', channel: 'facebook', days: [0, 1, 2, 3, 4, 5, 6], go: 'https://mail.google.com/mail/u/0/#search/subject%3A%22%5B%C4%90i%E1%BB%81u+h%C3%A0nh%5D%22+newer_than%3A1d' },
     { id: 'lead-8h', time: '08:00', text: 'Nhắn khách cần follow-up hôm nay', channel: 'lead', days: [1, 2, 3, 4, 5], go: '#/tim-khach' },
+    { id: 'thuam-video', time: '08:00', text: 'Đọc kịch bản sáng nay, thu âm, dựng video dài (đăng 19h)', channel: 'video', days: [0, 2, 4], go: '#/kenh/video' },
+    { id: 'threads-12h', time: '12:00', text: 'Đăng bài thị trường lên Threads', channel: 'threads', days: [1, 2, 3, 4, 5], go: '#/dang-bai' },
     { id: 'tiktok-16h', time: '16:45', text: 'Quay và đăng video tổng kết phiên lên TikTok', channel: 'tiktok', days: [1, 2, 3, 4, 5], go: '#/dang-bai' },
-    { id: 'fb-17h', time: '17:30', text: 'Đăng bài tìm khách lên Facebook Page', channel: 'facebook', days: [1, 2, 3, 4, 5], go: '#/dang-bai' },
-    { id: 'threads-17h', time: '17:30', text: 'Đăng 2 bài Threads', channel: 'threads', days: [1, 2, 3, 4, 5], go: '#/dang-bai' },
-    { id: 'thuam-video', time: '08:00', text: 'Đọc kịch bản sáng nay, thu âm, dựng video dài (đăng 19h)', channel: 'video', days: [0, 2, 4], go: '#/kenh/video' }
+    { id: 'zalo-17h', time: '17:30', text: 'Copy Tổng kết phiên vào cộng đồng Zalo', channel: 'zalo', days: [1, 2, 3, 4, 5], go: '#/dang-bai' },
+    { id: 'duyet-chieu', time: '17:50', text: 'Đọc email [Điều hành] chiều, trả lời DUYỆT / SỬA / BỎ (bài Facebook 18h)', channel: 'facebook', days: [1, 2, 3, 4, 5], go: 'https://mail.google.com/mail/u/0/#search/subject%3A%22%5B%C4%90i%E1%BB%81u+h%C3%A0nh%5D%22+newer_than%3A1d' },
+    { id: 'threads-18h', time: '18:00', text: 'Đăng bài tổng kết phiên lên Threads', channel: 'threads', days: [1, 2, 3, 4, 5], go: '#/dang-bai' },
+    { id: 'threads-20h', time: '20:30', text: 'Đăng bài kiến thức lên Threads', channel: 'threads', days: [1, 2, 3, 4, 5], go: '#/dang-bai' },
+    { id: 'shorts-cuoi-tuan', time: '10:00', text: 'Duyệt và đăng Shorts cắt từ video dài', channel: 'tiktok', days: [6, 0], go: '#/kenh/video' }
   ],
 
   // Quy tắc nội dung (bản rút gọn để rà bài trước khi đăng)

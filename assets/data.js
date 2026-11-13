@@ -11,7 +11,7 @@ TQ.DATA = {
   asOf: '2026-11-14',
 
   // Lần gần nhất Claude rà toàn bộ hệ thống (hiện ở ô Trạng thái trực tiếp)
-  check: { at: '2026-11-14', ok: true, text: '8 bot và 3 lịch điều hành chạy đủ 11–13/11. Bot tìm khách đổi sang bản theo văn phong. Facebook Page đăng được. YouTube, TikTok chưa kết nối. vidIQ hết credit tới 21/11.' },
+  check: { at: '2026-11-14', ok: true, text: '8 bot và 3 lịch điều hành chạy đủ 11–13/11. Bot tìm khách đổi sang bản theo văn phong. Form và Sheet khách đã cài. Facebook Page đăng được. YouTube, TikTok chưa kết nối. vidIQ hết credit tới 21/11.' },
 
   // Kho công khai của website: trang tự đọc lịch sử đăng bài ở đây, không cần đăng nhập
   live: { repo: 'voq30113-bit/dautucungthienquoc' },
@@ -236,7 +236,7 @@ TQ.DATA = {
     {
       id: 'lead', name: 'Khách đăng ký', icon: '📋', group: 'khach',
       desc: 'Google Form + Sheet khách của riêng bạn: tự chấm điểm, nhắc nhắn khách mỗi sáng, báo cáo phễu Chủ nhật.',
-      seed: { status: 'notcreated', note: 'Ngày 12/11/2026 chưa thấy Sheet "Lead – Đầu tư cùng Thiên Quốc" trên Drive.' },
+      seed: { status: 'connected', method: 'google', handle: 'Form + Sheet khách', note: 'Đã cài ngày 14/11/2026: Form, Sheet khách và bảng tổng hợp đều có trên Drive. Dán link Sheet ở trang kết nối để mở nhanh.' },
       links: [
         { label: 'Phễu khách', url: '#/tim-khach' },
         { label: 'Google Forms', url: 'https://docs.google.com/forms/u/0/' },

@@ -17,7 +17,15 @@
  *   - Tạo bảng "Tổng hợp Lead (không có thông tin cá nhân)": chỉ có con số đếm, để agent điều hành đọc.
  *
  * Dữ liệu khách nằm trong Google Drive của anh, chỉ anh xem được. Mã này không gửi dữ liệu đi đâu khác.
+ *
+ * ĐÃ CÀI RỒI, CHỈ MUỐN ĐỔI HỘP THƯ NHẬN EMAIL: mở https://script.google.com, mở đúng dự án đã cài,
+ * xoá hết mã cũ, dán bản này (đã có địa chỉ mới ở dòng EMAIL_NHAN), bấm Lưu, rồi chọn hàm "guiLaiLink" và bấm Chạy.
+ * Không chạy lại "caiDat". Form, Sheet và các việc tự chạy vẫn giữ nguyên.
  */
+
+// Hộp thư nhận mọi email của hệ thống này. Để trống = gửi về chính tài khoản Google đang cài.
+const EMAIL_NHAN = '';
+function nguoiNhan_() { return EMAIL_NHAN || Session.getEffectiveUser().getEmail(); }
 
 const TEN_FORM = 'Đăng ký nhận bản tin – Đầu tư cùng Thiên Quốc';
 const TEN_SHEET = 'Lead – Đầu tư cùng Thiên Quốc';
@@ -127,7 +135,32 @@ function caiDat() {
     'Việc tiếp theo: mở Trung tâm điều khiển → Phễu khách → dán link Sheet và link Form vào ô tương ứng.',
     'Thử ngay: tự điền Form một lần, xem Sheet có chấm điểm và tô màu không.'
   ].join('\n');
-  MailApp.sendEmail(Session.getActiveUser().getEmail(), 'Đã cài xong hệ thống khách đăng ký', tin);
+  MailApp.sendEmail(nguoiNhan_(), 'Đã cài xong hệ thống khách đăng ký', tin);
+  Logger.log(tin);
+}
+
+// Gửi lại các đường link (Form, Sheet, bảng tổng hợp) về hộp thư nhận. Chạy khi đổi hộp thư hoặc lỡ mất email đầu tiên.
+function guiLaiLink() {
+  const props = PropertiesService.getScriptProperties();
+  if (!props.getProperty('SHEET_ID')) { Logger.log('Chưa cài. Hãy chạy hàm "caiDat" trước.'); return; }
+  const form = FormApp.openById(props.getProperty('FORM_ID'));
+  const tin = [
+    'Các đường link của hệ thống khách đăng ký. Từ giờ mọi email nhắc việc gửi về hộp thư này.',
+    '',
+    '1) LINK FORM ĐỂ GỬI CHO KHÁCH:',
+    form.getPublishedUrl(),
+    '',
+    '2) SHEET KHÁCH (chỉ tài khoản đã cài xem được):',
+    'https://docs.google.com/spreadsheets/d/' + props.getProperty('SHEET_ID'),
+    '',
+    '3) BẢNG TỔNG HỢP (chỉ có con số):',
+    'https://docs.google.com/spreadsheets/d/' + props.getProperty('TONGHOP_ID'),
+    '',
+    '4) SỬA FORM:',
+    form.getEditUrl()
+  ].join('\n');
+  MailApp.sendEmail(nguoiNhan_(), 'Link hệ thống khách đăng ký (gửi lại)', tin);
+  Logger.log('Đã gửi tới ' + nguoiNhan_());
   Logger.log(tin);
 }
 
@@ -220,7 +253,7 @@ function khiCoDangKy(e) {
   sh.getRange(row, c.fu).setValue(homNay_());
   sh.getRange(row, 1, 1, sh.getLastColumn()).setBackground(MAU[k.hang]);
   if (k.hang === 'Nóng') {
-    MailApp.sendEmail(Session.getEffectiveUser().getEmail(), 'Lead nóng: dòng ' + row + ' (' + k.diem + ' điểm)',
+    MailApp.sendEmail(nguoiNhan_(), 'Lead nóng: dòng ' + row + ' (' + k.diem + ' điểm)',
       'Có khách hạng Nóng vừa đăng ký, nên nhắn trong hôm nay.\n\n' +
       'Dòng ' + row + ' trong Sheet: ' + sh.getParent().getUrl() + '\n' +
       'Muốn nhận: ' + o.nhan + '\nKinh nghiệm: ' + o.kn + '\nTài khoản: ' + o.tk + '\nVốn: ' + o.von + '\nNguồn: ' + o.nguon + '\nBăn khoăn: ' + (o.lo || '(không ghi)') +
@@ -279,7 +312,7 @@ function viecHomNay() {
     than.push('');
   });
   than.push('Ai nhắn HỦY thì đổi Trạng thái thành "Hủy" và ngừng nhắn.');
-  MailApp.sendEmail(Session.getEffectiveUser().getEmail(), 'Việc tìm khách hôm nay ' + dm_(new Date()) + ' — ' + ds.length + ' khách cần nhắn', than.join('\n'));
+  MailApp.sendEmail(nguoiNhan_(), 'Việc tìm khách hôm nay ' + dm_(new Date()) + ' — ' + ds.length + ' khách cần nhắn', than.join('\n'));
 }
 
 /* ====================== ĐẾM (không có thông tin cá nhân) ====================== */
@@ -334,7 +367,7 @@ function baoCaoTuan() {
     'THEO TRẠNG THÁI', dong(k.tt), '', 'THEO HẠNG', dong(k.hang), '', 'THEO NGUỒN', dong(k.nguon), '',
     'ĐÃ MỞ TÀI KHOẢN, THEO NGUỒN', dong(k.nguonMo), '', 'KHÁCH MUỐN NHẬN GÌ', dong(k.nhan), '',
     'Gợi ý: nguồn nào ra nhiều khách mở tài khoản nhất thì tuần tới dồn nội dung cho kênh đó.'].join('\n');
-  MailApp.sendEmail(Session.getEffectiveUser().getEmail(), 'Báo cáo phễu khách tuần ' + dm_(new Date()), than);
+  MailApp.sendEmail(nguoiNhan_(), 'Báo cáo phễu khách tuần ' + dm_(new Date()), than);
 }
 
 /* ====================== THỬ CÁCH CHẤM ĐIỂM (không đụng dữ liệu thật) ====================== */

@@ -10,7 +10,7 @@
   const WD_LONG = ['Chủ nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
 
   /* ---------- Lưu trữ ---------- */
-  const blank = () => ({ channels: {}, tasks: {}, daily: {}, jobsSeen: {}, video: {}, drafts: [], compose: '', claudeForm: null, claudeHistory: [], log: [], notes: {}, funnel: {}, goals: {}, leadForm: '', theme: 'auto' });
+  const blank = () => ({ channels: {}, tasks: {}, daily: {}, jobsSeen: {}, video: {}, drafts: [], compose: '', claudeForm: null, claudeHistory: [], log: [], notes: {}, funnel: {}, goals: {}, leadForm: '', mail: '', theme: 'auto' });
   let S = load();
   function load() {
     try {
@@ -718,14 +718,25 @@
     { id: 'bk', label: 'Có ghi điều băn khoăn', type: 'checkbox', opts: [['Có', 1]] }
   ];
   const FUNNEL = [['moi', 'Lead mới'], ['nhan', 'Đã nhắn'], ['traloi', 'Đã trả lời'], ['hen', 'Hẹn trao đổi'], ['mo', 'Mở tài khoản']];
+  const isMail = (s) => /^[A-Za-z0-9._%+-]{1,64}@[A-Za-z0-9.-]{1,80}\.[A-Za-z]{2,}$/.test(s);
+  function mailField(label) {
+    return '<label class="field"><span>' + label + '</span><input type="text" inputmode="email" autocomplete="email" data-mail="1" value="' + esc(S.mail || '') + '" placeholder="tenhopthu@gmail.com"></label>';
+  }
+  // Link Gmail mặc định mở tài khoản đang đăng nhập đầu tiên. Có hộp thư đã lưu thì mở đúng hộp thư đó.
+  function fixMailLinks(rootEl) {
+    if (!S.mail || !isMail(S.mail)) return;
+    const pre = 'https://mail.google.com/mail/u/0/';
+    for (const a of $$('a[href^="' + pre + '"]', rootEl)) a.href = 'https://mail.google.com/mail/u/?authuser=' + encodeURIComponent(S.mail) + a.getAttribute('href').slice(pre.length);
+  }
   function installCard(open) {
     return '<details class="card install" id="cai-dat-lead"' + (open ? ' open' : '') + '><summary><h2>Cài Form đăng ký và Sheet khách trong 3 phút</h2><span class="muted small">Làm một lần. Mã chạy trong tài khoản Google của bạn, dữ liệu khách chỉ bạn xem được.</span></summary>' +
       '<ol class="steps" style="margin-top:14px">' +
-      '<li><h3>Copy mã cài đặt</h3><p>Một nút bấm, không cần đọc mã.</p><div class="btns"><button class="btn primary" type="button" data-act="copy-lead-code">Copy mã cài đặt</button></div></li>' +
+      '<li><h3>Nhập hộp thư nhận email, rồi copy mã</h3><p>Email nhắc nhắn khách, khách Nóng và báo cáo phễu sẽ gửi về hộp thư này. Địa chỉ chỉ lưu trên máy bạn và được điền sẵn vào mã khi copy.</p>' + mailField('Hộp thư nhận email') + '<div class="btns"><button class="btn primary" type="button" data-act="copy-lead-code">Copy mã cài đặt</button></div></li>' +
       '<li><h3>Mở trang Apps Script và dán</h3><p>Đăng nhập đúng tài khoản Google nhận báo cáo. Xoá hết chữ có sẵn, dán mã (Ctrl+V), bấm biểu tượng lưu.</p><div class="btns"><a class="btn ext" href="https://script.new" target="_blank" rel="noopener">Mở script.new</a></div></li>' +
       '<li><h3>Chọn hàm caiDat rồi bấm Chạy</h3><p>Google hỏi quyền: chọn tài khoản → <b>Nâng cao</b> → <b>Đi tới dự án</b> → <b>Cho phép</b>. Cảnh báo "chưa xác minh" là bình thường vì đây là mã của riêng bạn.</p></li>' +
       '<li><h3>Mở email "Đã cài xong hệ thống khách đăng ký"</h3><p>Trong email có link Form (gửi cho khách), link Sheet khách và link bảng tổng hợp. Dán hai link đầu vào ô bên dưới.</p><div class="btns"><a class="btn" href="#/ket-noi/lead">Dán link Sheet khách</a></div></li>' +
-      '</ol><p class="muted small" style="margin:0">Sau khi cài: có người đăng ký là Sheet tự chấm điểm và tô màu; khách Nóng thì báo email ngay; 8h sáng T2–T6 có email "Việc tìm khách hôm nay" kèm tin nhắn soạn sẵn; 19h Chủ nhật có báo cáo phễu tuần.</p></details>';
+      '</ol><div class="note"><b>Đã cài rồi, chỉ muốn đổi hộp thư?</b> Nhập hộp thư mới ở bước 1 và bấm Copy. Mở <a href="https://script.google.com/home" target="_blank" rel="noopener">script.google.com ↗</a>, mở đúng dự án đã cài, xoá mã cũ, dán mã mới, bấm lưu. Sau đó chọn hàm <b>guiLaiLink</b> và bấm Chạy để nhận lại link Form ở hộp thư mới. Không chạy lại caiDat.</div>' +
+      '<p class="muted small" style="margin:0">Sau khi cài: có người đăng ký là Sheet tự chấm điểm và tô màu; khách Nóng thì báo email ngay; 8h sáng T2–T6 có email "Việc tìm khách hôm nay" kèm tin nhắn soạn sẵn; 19h Chủ nhật có báo cáo phễu tuần.</p></details>';
   }
   function playbookCard() {
     return '<div class="card" id="kich-ban-tu-van"><div class="card-head"><h2>Khi khách hỏi khó</h2><span class="right muted small">Bấm để mở, copy rồi sửa cho hợp người</span></div>' +
@@ -948,6 +959,7 @@
       '<div class="grid2"><div>' +
       '<div class="card" id="du-lieu"><h2>Dữ liệu của bạn</h2><p class="muted">Trạng thái kết nối, việc đã làm, bản nháp, nhật ký được lưu <b>trong trình duyệt này</b> (' + Math.round(size / 1024) + ' KB). Mở trên máy khác sẽ trống: tải bản sao lưu ở đây và nạp lại ở máy kia.</p>' +
       '<div class="btns"><button class="btn primary" data-act="export">Tải bản sao lưu (.json)</button><label class="btn">Nạp bản sao lưu<input type="file" accept="application/json,.json" id="importfile" hidden></label><button class="btn danger" data-act="reset">Xoá hết, làm lại</button></div></div>' +
+      '<div class="card" id="hop-thu"><h2>Hộp thư nhận báo cáo</h2>' + mailField('Địa chỉ Gmail đang nhận email của các bot') + '<p class="muted small" style="margin:0">Mọi nút "Mở Gmail" và "Tìm trong Gmail" trên trang sẽ mở đúng hộp thư này, kể cả khi máy đang đăng nhập nhiều tài khoản Google. Địa chỉ chỉ lưu trong trình duyệt này.</p></div>' +
       '<div class="card" id="giao-dien"><h2>Giao diện</h2><div class="choices">' +
       [['auto', 'Theo máy'], ['light', 'Sáng'], ['dark', 'Tối']].map(([v, l]) => '<label><input type="radio" name="theme" value="' + v + '"' + (S.theme === v ? ' checked' : '') + '>' + l + '</label>').join('') + '</div></div>' +
       '<div class="card" id="an-toan"><h2>An toàn</h2><ul class="list"><li><span class="dot ok"></span><div class="body">Trang không hỏi, không lưu mật khẩu. Mọi nút đăng nhập mở trang chính thức của TikTok, Google, Facebook...</div></li>' +
@@ -978,6 +990,7 @@
     const html = fn();
     if (html === '' && route === 'ket-noi') return;
     $('#main').innerHTML = html;
+    fixMailLinks($('#main'));
     const titles = { '': 'Hôm nay', doi: 'Đội ngũ', kenh: (chById(arg) || {}).name, 'ket-noi': 'Kết nối ' + ((chById(arg) || {}).name || ''), lich: 'Lịch tự động', 'dang-bai': 'Đăng bài', claude: 'Trợ lý Claude', 'tim-khach': 'Phễu khách', 'nhat-ky': 'Nhật ký', 'cai-dat': 'Cài đặt' };
     document.title = (titles[route] || 'Trung tâm điều khiển') + ' · Thiên Quốc';
     if (route === 'ket-noi') { const f = $('form[data-form="connect"]'); if (f) connectPreview(f); }
@@ -1006,7 +1019,12 @@
     else if (act === 'live-refresh') liveRefresh(true);
     else if (act === 'copy-lead-code') {
       fetch('lead/cai-dat-lead.gs', { cache: 'no-store' }).then((r) => { if (!r.ok) throw new Error('x'); return r.text(); })
-        .then((t) => { copy(t); addLog('lead', 'Đã copy mã cài đặt Form + Sheet khách', 'info'); save(); })
+        .then((t) => {
+          const mark = "const EMAIL_NHAN = '';";
+          if (S.mail && isMail(S.mail) && t.indexOf(mark) >= 0) t = t.replace(mark, "const EMAIL_NHAN = '" + S.mail + "';");
+          copy(t); if (!S.mail) toast('Đã copy. Chưa nhập hộp thư nên email sẽ về tài khoản đang cài.');
+          addLog('lead', 'Đã copy mã cài đặt Form + Sheet khách', 'info'); save();
+        })
         .catch(() => toast('Không tải được mã. Kiểm tra mạng rồi bấm lại.'));
     }
     else if (act === 'pick-method') { UI.method[el.dataset.ch] = id; rerender(); }
@@ -1150,6 +1168,7 @@
     else if (t.dataset.notes) { clearTimeout(notesTimer); notesTimer = setTimeout(() => { S.notes[t.dataset.notes] = t.value; save(); }, 400); }
     else if (t.dataset.funnel) { const wk = weekKey(); S.funnel[wk] = S.funnel[wk] || {}; S.funnel[wk][t.dataset.funnel] = Math.max(0, parseInt(t.value, 10) || 0); save(); funnelUpdate(); stripUpdate(); }
     else if (t.dataset.goal) { S.goals = S.goals || {}; S.goals[t.dataset.goal] = Math.max(0, parseInt(t.value, 10) || 0); save(); stripUpdate(); }
+    else if (t.dataset.mail) { const v = t.value.trim(); if (!v || isMail(v)) { S.mail = v; save(); fixMailLinks(document); } }
     else if (t.id === 'leadformurl') { const v = t.value.trim(); if (!v || isUrl(v)) { S.leadForm = v; save(); } }
     else if (t.id === 'mname' || t.id === 'mworry') msgUpdate();
     else if (t.dataset.cf) { clSetValue(clTpl(), t.dataset.cf, t.value); clUpdate(); }

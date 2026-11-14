@@ -1,14 +1,14 @@
 {
-  "at": "2026-11-14T02:25:00+07:00",
-  "mode": "kiem-tra",
-  "headline": "Cả đội chạy đủ trong 3 ngày 11–13/11. Hôm nay là ngày nâng cấp hệ thống.",
+  "at": "2026-11-14T07:18:00+07:00",
+  "mode": "sang",
+  "headline": "8 bot chạy ổn, hôm nay anh cần làm 3 việc.",
   "pending": 0,
-  "bots": [],
-  "tasks": [
-    "Cài Form đăng ký và Sheet khách ở mục Phễu khách (3 phút)",
-    "Kết nối YouTube và TikTok ở mục Kênh",
-    "Gửi link tham gia cộng đồng Zalo"
+  "bots": [
+    {"id": "xu-huong", "ok": false, "time": "", "note": "Chưa chạy lượt nào sáng nay (GitHub trễ lịch mới). Bot nghiên cứu đã dùng tệp 13/11."},
+    {"id": "nghien-cuu", "ok": true, "time": "06:02", "note": ""},
+    {"id": "dh-sang", "ok": true, "time": "07:18", "note": ""}
   ],
-  "lead": null,
-  "note": "Báo cáo đầu tiên do Claude ghi tay khi nâng cấp. Từ lần chạy 7h15 tới, agent điều hành tự ghi."
+  "tasks": ["8h Nhắn 1 khách đăng ký mới", "12h00 Đăng Threads bài 1", "20h30 Đăng Threads bài 2"],
+  "lead": {"tong": 1, "moi": 1, "canNhan": 1},
+  "note": "Thứ Bảy: không có bản tin sáng."
 }

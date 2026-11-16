@@ -1,16 +1,18 @@
 {
-  "at": "2026-11-15T07:18:00+07:00",
+  "at": "2026-11-16T07:28:00+07:00",
   "mode": "sang",
-  "headline": "8 bot chạy ổn, hôm nay anh cần làm 5 việc.",
-  "pending": 0,
+  "headline": "8 bot chạy ổn, hôm nay anh cần làm 6 việc.",
+  "pending": 1,
   "bots": [
-    {"id": "xu-huong", "ok": true, "time": "06:57", "note": "Có tệp hôm nay nhưng về muộn, sau giờ bot nghiên cứu"},
+    {"id": "vi-mo", "ok": true, "time": "21:42", "note": "Báo cáo tuần về tối Chủ nhật 15/11"},
+    {"id": "xu-huong", "ok": true, "time": "06:59", "note": "Có tệp hôm nay nhưng về muộn, sau giờ bot nghiên cứu chạy"},
     {"id": "nghien-cuu", "ok": true, "time": "06:03", "note": ""},
-    {"id": "kich-ban", "ok": true, "time": "06:42", "note": ""},
-    {"id": "web", "ok": true, "time": "", "note": "Cuối tuần không có bài mới, bình thường"},
-    {"id": "dh-sang", "ok": true, "time": "07:18", "note": ""}
+    {"id": "diem-tin", "ok": true, "time": "07:19", "note": ""},
+    {"id": "nhan-dinh", "ok": true, "time": "07:20", "note": "Về sau giờ gửi Zalo 7h05"},
+    {"id": "web", "ok": true, "time": "21:46", "note": "Lượt gần nhất (tối Chủ nhật) đã đăng bài mới"},
+    {"id": "dh-sang", "ok": true, "time": "07:28", "note": ""}
   ],
-  "tasks": ["8h Nhắn 1 khách đăng ký mới", "12h Đăng Threads bài 1", "Thu âm và dựng video nhìn lại tuần", "19h Đăng video YouTube", "20h30 Đăng Threads bài 2"],
-  "lead": {"tong": 1, "moi": 1, "canNhan": 1},
+  "tasks": ["Copy Nhận định vào Zalo", "8h Nhắn 1 khách đăng ký", "Trước 8h45 duyệt bài 1 Facebook", "12h00 Đăng Threads bài 3", "16h45 Quay video TikTok tổng kết phiên", "20h30 Đăng Threads bài 4"],
+  "lead": {"tong": 1, "moi": 0, "canNhan": 1},
   "note": ""
 }

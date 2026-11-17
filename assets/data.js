@@ -273,6 +273,10 @@ TQ.DATA = {
       short: 'Kịch bản video dài T3, T5, CN',
       does: 'Viết kịch bản 1.200–1.800 từ theo đúng văn phong, chia [PHẦN] để cắt Shorts. T3 kiến thức nền, T5 câu hỏi người xem, CN nhìn lại tuần.',
       hands: 'Bạn thu âm và dựng. Shorts cắt ra đăng TikTok cuối tuần.' },
+    { id: 'livestream', icon: '🎙️', role: 'Biên kịch livestream', kind: 'Bot trên mây', stage: 'thu-hut', jobs: ['livestream'],
+      short: 'Kịch bản live 20h, Thứ Hai đến Thứ Sáu',
+      does: 'Gửi kịch bản lúc khoảng 18h20: dàn ý theo phút, câu nói mẫu, bảng số liệu nhanh, câu trả lời cho câu hỏi khó trên live, gợi ý cắt clip. Chủ đề xoay: T2 tuần mới, T3 nhóm ngành, T4 vĩ mô, T5 hỏi đáp, T6 tổng kết tuần.',
+      hands: 'Bạn đăng thông báo 19h30 và lên sóng 20h. Đoạn hay cắt thành Shorts/TikTok.' },
     { id: 'tim-khach', icon: '🧲', role: 'Viết bài tìm khách', kind: 'Bot trên mây', stage: 'thu-hut', jobs: ['tim-khach'],
       short: 'Bài Facebook, TikTok, Threads mỗi chiều',
       does: 'Từ bản Tổng kết phiên, viết bài Facebook, chú thích và bình luận ghim TikTok, bài Threads, kèm câu trả lời bình luận soạn sẵn. Bài nào cũng dẫn về bản tin Zalo.',
@@ -331,6 +335,7 @@ TQ.DATA = {
     { id: 'tong-ket', name: 'Tổng kết phiên', channel: 'email', days: [1, 2, 3, 4, 5], times: ['16:30'], subject: 'Tổng kết phiên', proof: 'content(tong-ket)' },
     { id: 'tim-khach', name: 'Nội dung tìm khách (FB · TikTok · Threads)', channel: 'email', days: [1, 2, 3, 4, 5], times: ['17:25'], subject: 'Nội dung tìm khách' },
     { id: 'dh-chieu', name: 'Điều hành chiều: bài tổng kết chờ duyệt', channel: 'email', days: [1, 2, 3, 4, 5], times: ['17:40'], subject: '[Điều hành]' },
+    { id: 'livestream', name: 'Kịch bản livestream 20h', channel: 'video', days: [1, 2, 3, 4, 5], times: ['18:00'], subject: 'Kịch bản livestream' },
     { id: 'vi-mo', name: 'Báo cáo vĩ mô tuần', channel: 'email', days: [0], times: ['20:00'], subject: 'Báo cáo vĩ mô', proof: 'content(bao-cao)', proofHours: 40 },
     { id: 'web', name: 'Đăng bài lên website', channel: 'website', days: [0, 1, 2, 3, 4, 5, 6], times: ['07:45', '17:45', '21:45'], proof: 'content: publish', proofHours: 2.5, link: 'https://github.com/voq30113-bit/dautucungthienquoc/actions', linkLabel: 'Xem trên GitHub' }
   ],
@@ -346,7 +351,9 @@ TQ.DATA = {
     { id: 'zalo-17h', time: '17:30', text: 'Copy Tổng kết phiên vào cộng đồng Zalo', channel: 'zalo', days: [1, 2, 3, 4, 5], go: '#/dang-bai' },
     { id: 'duyet-chieu', time: '17:50', text: 'Đọc email [Điều hành] chiều, trả lời DUYỆT / SỬA / BỎ (bài Facebook 18h)', channel: 'facebook', days: [1, 2, 3, 4, 5], go: 'https://mail.google.com/mail/u/0/#search/subject%3A%22%5B%C4%90i%E1%BB%81u+h%C3%A0nh%5D%22+newer_than%3A1d' },
     { id: 'threads-18h', time: '18:00', text: 'Đăng bài tổng kết phiên lên Threads', channel: 'threads', days: [1, 2, 3, 4, 5], go: '#/dang-bai' },
-    { id: 'threads-20h', time: '20:30', text: 'Đăng bài kiến thức lên Threads', channel: 'threads', days: [1, 2, 3, 4, 5], go: '#/dang-bai' },
+    { id: 'live-thong-bao', time: '19:30', text: 'Đăng thông báo livestream 20h (bài soạn sẵn trong email kịch bản)', channel: 'facebook', days: [1, 2, 3, 4, 5], go: 'https://mail.google.com/mail/u/0/#search/subject%3A%22K%E1%BB%8Bch+b%E1%BA%A3n+livestream%22+newer_than%3A1d' },
+    { id: 'live-20h', time: '20:00', text: 'Livestream 20h theo kịch bản (khoảng 35 phút)', channel: 'video', days: [1, 2, 3, 4, 5], go: 'https://mail.google.com/mail/u/0/#search/subject%3A%22K%E1%BB%8Bch+b%E1%BA%A3n+livestream%22+newer_than%3A1d' },
+    { id: 'threads-20h', time: '20:45', text: 'Đăng bài kiến thức lên Threads (sau khi tắt live)', channel: 'threads', days: [1, 2, 3, 4, 5], go: '#/dang-bai' },
     { id: 'shorts-cuoi-tuan', time: '10:00', text: 'Duyệt và đăng Shorts cắt từ video dài', channel: 'tiktok', days: [6, 0], go: '#/kenh/video' }
   ],
 

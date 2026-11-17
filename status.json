@@ -1,17 +1,20 @@
 {
-  "at": "2026-11-17T07:24:00+07:00",
-  "mode": "sang",
-  "headline": "8 bot chạy ổn, hôm nay anh cần làm 7 việc.",
+  "at": "2026-11-17T17:42:00+07:00",
+  "mode": "chieu",
+  "headline": "8 bot chạy ổn, tối nay anh cần làm 7 việc.",
   "pending": 1,
   "bots": [
-    {"id": "xu-huong", "ok": false, "time": "", "note": "GitHub chưa chạy lượt nào sáng nay, bot nghiên cứu dùng tệp hôm qua"},
+    {"id": "xu-huong", "ok": false, "time": "09:57", "note": "Tệp xu hướng về muộn sau giờ bot nghiên cứu chạy, ngày thứ 6 liền"},
     {"id": "nghien-cuu", "ok": true, "time": "06:03", "note": ""},
     {"id": "kich-ban", "ok": true, "time": "06:42", "note": ""},
     {"id": "diem-tin", "ok": true, "time": "07:17", "note": ""},
     {"id": "nhan-dinh", "ok": true, "time": "07:20", "note": ""},
-    {"id": "dh-sang", "ok": true, "time": "07:24", "note": ""}
+    {"id": "dh-sang", "ok": true, "time": "07:24", "note": ""},
+    {"id": "tong-ket", "ok": true, "time": "16:47", "note": ""},
+    {"id": "tim-khach", "ok": true, "time": "17:27", "note": ""},
+    {"id": "dh-chieu", "ok": true, "time": "17:44", "note": ""}
   ],
-  "tasks": ["Copy Nhận định vào Zalo", "8h Nhắn 1 khách đăng ký", "Trước 8h45 duyệt bài 1 Facebook", "12h Đăng Threads bài 3", "16h45 Quay video TikTok tổng kết phiên", "Thu âm, dựng video dài, duyệt đăng YouTube 19h", "20h30 Đăng Threads bài 4"],
+  "tasks": ["Nhắn 1 khách đăng ký nếu sáng chưa nhắn", "Copy tổng kết phiên vào Zalo", "Quay video TikTok tổng kết phiên nếu chưa quay", "Trước 18h40 duyệt bài 5 Facebook", "18h Đăng Threads bài 6", "19h Duyệt đăng video dài YouTube", "20h30 Đăng Threads bài 4"],
   "lead": {"tong": 1, "moi": 0, "canNhan": 1},
   "note": ""
 }

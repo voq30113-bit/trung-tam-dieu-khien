@@ -1,21 +1,16 @@
 {
-  "at": "2026-11-19T17:42:00+07:00",
-  "mode": "chieu",
-  "headline": "9 bot chạy ổn, tối nay anh cần làm 7 việc.",
+  "at": "2026-11-20T07:24:00+07:00",
+  "mode": "sang",
+  "headline": "9 bot chạy ổn, hôm nay anh cần làm 7 việc.",
   "pending": 1,
   "bots": [
-    {"id": "xu-huong", "ok": false, "time": "08:53", "note": "Tệp xu hướng hôm nay về 8h53, sau giờ bot nghiên cứu chạy"},
-    {"id": "nghien-cuu", "ok": true, "time": "06:03", "note": ""},
-    {"id": "kich-ban", "ok": true, "time": "06:42", "note": ""},
-    {"id": "diem-tin", "ok": true, "time": "07:19", "note": ""},
-    {"id": "nhan-dinh", "ok": true, "time": "07:20", "note": ""},
-    {"id": "dh-sang", "ok": true, "time": "07:27", "note": ""},
-    {"id": "web", "ok": true, "time": "07:47", "note": "Lượt 17h45 chưa tới giờ kiểm"},
-    {"id": "tong-ket", "ok": true, "time": "16:46", "note": ""},
-    {"id": "tim-khach", "ok": true, "time": "17:26", "note": ""},
-    {"id": "dh-chieu", "ok": true, "time": "17:42", "note": ""}
+    {"id": "xu-huong", "ok": false, "time": "", "note": "Tới 7h23 GitHub chưa chạy lượt nào, chưa có tệp hôm nay (ngày thứ 9 về muộn)"},
+    {"id": "nghien-cuu", "ok": true, "time": "06:03", "note": "Dùng tệp tín hiệu hôm qua"},
+    {"id": "diem-tin", "ok": true, "time": "07:14", "note": ""},
+    {"id": "nhan-dinh", "ok": true, "time": "07:19", "note": ""},
+    {"id": "dh-sang", "ok": true, "time": "07:24", "note": ""}
   ],
-  "tasks": ["Gửi bản Zalo tổng kết", "Trước 18h40 duyệt bài 1 Facebook", "18h Đăng Threads tổng kết", "Quay và đăng TikTok tổng kết nếu chưa làm", "19h Đăng video dài YouTube", "19h30 thông báo live, 20h livestream", "Sau live đăng Threads bài 4"],
+  "tasks": ["Copy Nhận định vào Zalo", "8h Nhắn 1 khách đăng ký", "Trước 8h45 duyệt bài 1 (Facebook)", "12h Đăng Threads bài 3", "16h45 Quay video TikTok tổng kết", "19h30 thông báo live, 20h livestream Tổng kết tuần", "Sau live đăng Threads bài 4"],
   "lead": {"tong": 1, "moi": 0, "canNhan": 1},
-  "note": ""
+  "note": "Các ý A, B, C, E, F, G đang chờ anh quyết trong email sáng"
 }

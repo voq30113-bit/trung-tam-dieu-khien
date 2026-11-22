@@ -1,14 +1,15 @@
 {
-  "at": "2026-11-21T07:17:00+07:00",
+  "at": "2026-11-22T07:19:00+07:00",
   "mode": "sang",
-  "headline": "9 bot chạy ổn, hôm nay anh cần làm 3 việc.",
+  "headline": "9 bot chạy ổn, hôm nay anh cần làm 4 việc.",
   "pending": 0,
   "bots": [
-    {"id": "xu-huong", "ok": false, "time": "", "note": "Chưa có tệp tín hiệu 21/11 lúc 7h15, GitHub chạy trễ lịch"},
-    {"id": "nghien-cuu", "ok": true, "time": "06:03", "note": ""},
-    {"id": "dh-sang", "ok": true, "time": "07:17", "note": ""}
+    {"id": "xu-huong", "ok": false, "time": "", "note": "Tới 7h15 chưa có tệp tín hiệu hôm nay (GitHub chạy trễ), bot nghiên cứu dùng tệp hôm qua"},
+    {"id": "nghien-cuu", "ok": true, "time": "06:02", "note": ""},
+    {"id": "kich-ban", "ok": true, "time": "06:43", "note": "Agent đã rà, có 3 chỗ cần sửa nhỏ trước khi thu âm"},
+    {"id": "dh-sang", "ok": true, "time": "07:19", "note": ""}
   ],
-  "tasks": ["Nhắn 1 khách đăng ký (đã chờ 7 ngày)", "12h Đăng Threads bài kiến thức (tuỳ chọn)", "Cài lại mã hệ thống khách đăng ký (ý A)"],
+  "tasks": ["Sáng nay: nhắn 1 khách đăng ký đang chờ", "Thu âm video Chủ nhật theo kịch bản, đăng YouTube 19h", "12h00 đăng Threads bài 1", "20h30 đăng Threads bài 2 (sau khi video lên)", "Trả lời các ý A, B, C, E, F, G đang chờ quyết"],
   "lead": {"tong": 1, "moi": 0, "canNhan": 1},
-  "note": "Thứ Bảy: không có bài Facebook theo lịch"
+  "note": "Sáng Chủ nhật: có nhìn lại tuần và kế hoạch nội dung tuần tới trong email"
 }

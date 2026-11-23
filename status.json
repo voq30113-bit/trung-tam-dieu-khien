@@ -1,15 +1,17 @@
 {
-  "at": "2026-11-22T07:19:00+07:00",
+  "at": "2026-11-23T07:25:00+07:00",
   "mode": "sang",
-  "headline": "9 bot chạy ổn, hôm nay anh cần làm 4 việc.",
-  "pending": 0,
+  "headline": "9 bot chạy ổn, hôm nay anh cần làm 7 việc.",
+  "pending": 1,
   "bots": [
-    {"id": "xu-huong", "ok": false, "time": "", "note": "Tới 7h15 chưa có tệp tín hiệu hôm nay (GitHub chạy trễ), bot nghiên cứu dùng tệp hôm qua"},
-    {"id": "nghien-cuu", "ok": true, "time": "06:02", "note": ""},
-    {"id": "kich-ban", "ok": true, "time": "06:43", "note": "Agent đã rà, có 3 chỗ cần sửa nhỏ trước khi thu âm"},
-    {"id": "dh-sang", "ok": true, "time": "07:19", "note": ""}
+    {"id": "xu-huong", "ok": false, "time": "", "note": "Chưa có tệp tín hiệu 23/11 lúc 7h24, ngày thứ 12 về muộn"},
+    {"id": "nghien-cuu", "ok": true, "time": "06:03", "note": ""},
+    {"id": "nhan-dinh", "ok": true, "time": "07:21", "note": ""},
+    {"id": "diem-tin", "ok": true, "time": "07:22", "note": ""},
+    {"id": "vi-mo", "ok": true, "time": "21:19", "note": "Báo cáo tuần về tối Chủ nhật 22/11"},
+    {"id": "dh-sang", "ok": true, "time": "07:25", "note": ""}
   ],
-  "tasks": ["Sáng nay: nhắn 1 khách đăng ký đang chờ", "Thu âm video Chủ nhật theo kịch bản, đăng YouTube 19h", "12h00 đăng Threads bài 1", "20h30 đăng Threads bài 2 (sau khi video lên)", "Trả lời các ý A, B, C, E, F, G đang chờ quyết"],
+  "tasks": ["Copy Nhận định vào Zalo", "8h Nhắn 1 khách đăng ký", "Trước 8h45 duyệt bài 1", "12h Đăng Threads bài 3", "16h45 Quay video tổng kết TikTok", "19h30 thông báo live, 20h livestream", "20h40 Đăng Threads bài 4"],
   "lead": {"tong": 1, "moi": 0, "canNhan": 1},
-  "note": "Sáng Chủ nhật: có nhìn lại tuần và kế hoạch nội dung tuần tới trong email"
+  "note": ""
 }

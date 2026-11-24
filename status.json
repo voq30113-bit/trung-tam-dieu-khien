@@ -1,17 +1,20 @@
 {
-  "at": "2026-11-24T07:23:00+07:00",
-  "mode": "sang",
-  "headline": "9 bot chạy ổn, hôm nay anh cần làm 7 việc.",
+  "at": "2026-11-24T17:54:00+07:00",
+  "mode": "chieu",
+  "headline": "9 bot chạy ổn, tối nay anh cần làm 5 việc.",
   "pending": 1,
   "bots": [
-    {"id": "xu-huong", "ok": false, "time": "", "note": "GitHub chưa chạy lượt nào cho hôm nay lúc 7h22, ngày thứ 13 liền về muộn"},
+    {"id": "xu-huong", "ok": false, "time": "11:49", "note": "Về muộn lúc 11h49, sau giờ bot Chủ đề nổi bật chạy"},
     {"id": "nghien-cuu", "ok": true, "time": "06:02", "note": "Dùng tệp tín hiệu hôm qua"},
     {"id": "kich-ban", "ok": true, "time": "06:43", "note": ""},
     {"id": "diem-tin", "ok": true, "time": "07:21", "note": ""},
     {"id": "nhan-dinh", "ok": true, "time": "07:21", "note": "Hôm nay thị trường nghỉ, giao dịch lại 25/11"},
-    {"id": "dh-sang", "ok": true, "time": "07:23", "note": ""}
+    {"id": "dh-sang", "ok": true, "time": "07:23", "note": ""},
+    {"id": "tong-ket", "ok": true, "time": "16:44", "note": "Ngày nghỉ lễ: gửi thông báo không có phiên"},
+    {"id": "tim-khach", "ok": true, "time": "17:26", "note": "Ngày nghỉ lễ: bot tự dừng vì không có bản tổng kết, đúng thiết kế"},
+    {"id": "dh-chieu", "ok": true, "time": "17:54", "note": ""}
   ],
-  "tasks": ["Copy Nhận định vào Zalo", "8h Nhắn 1 khách đăng ký", "Trước 8h45 duyệt bài Facebook", "12h Đăng Threads", "Thu âm, dựng video dài, đăng YouTube 19h", "19h30 thông báo live, 20h livestream", "20h40 Đăng Threads kiến thức"],
+  "tasks": ["Nhắn 1 khách đăng ký nếu chưa nhắn", "Trước 19h30 duyệt bài Facebook chiều", "19h Đăng video dài lên YouTube", "19h30 thông báo live, 20h livestream", "Sau live đăng 2 bài Threads"],
   "lead": {"tong": 1, "moi": 0, "canNhan": 1},
   "note": "Thị trường nghỉ 24/11"
 }

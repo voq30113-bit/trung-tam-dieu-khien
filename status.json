@@ -1,20 +1,16 @@
 {
-  "at": "2026-11-26T17:42:00+07:00",
-  "mode": "chieu",
-  "headline": "9 bot chạy ổn, tối nay anh cần làm 6 việc.",
+  "at": "2026-11-27T07:26:00+07:00",
+  "mode": "sang",
+  "headline": "8 bot chạy ổn (bot website em vẫn chưa kiểm tra được), hôm nay anh cần làm 7 việc.",
   "pending": 1,
   "bots": [
-    {"id": "xu-huong", "ok": false, "time": "09:52", "note": "Tệp hôm nay về 9h52, muộn sau giờ bot nghiên cứu chạy"},
-    {"id": "nghien-cuu", "ok": true, "time": "06:03", "note": ""},
-    {"id": "kich-ban", "ok": true, "time": "06:42", "note": ""},
-    {"id": "diem-tin", "ok": true, "time": "07:20", "note": ""},
-    {"id": "nhan-dinh", "ok": true, "time": "07:22", "note": ""},
-    {"id": "dh-sang", "ok": true, "time": "07:25", "note": ""},
-    {"id": "tong-ket", "ok": true, "time": "16:46", "note": ""},
-    {"id": "tim-khach", "ok": true, "time": "17:26", "note": ""},
-    {"id": "dh-chieu", "ok": true, "time": "17:42", "note": ""}
+    {"id": "xu-huong", "ok": false, "time": "", "note": "Tới 7h25 GitHub chưa chạy lượt nào cho hôm nay, ngày thứ 16 liền về muộn"},
+    {"id": "nghien-cuu", "ok": true, "time": "06:03", "note": "Dùng tệp tín hiệu hôm qua"},
+    {"id": "diem-tin", "ok": true, "time": "07:17", "note": ""},
+    {"id": "nhan-dinh", "ok": true, "time": "07:21", "note": ""},
+    {"id": "dh-sang", "ok": true, "time": "07:25", "note": ""}
   ],
-  "tasks": ["Copy bản tổng kết vào Zalo", "Trước 19h30 duyệt bài 5", "18h Đăng Threads bài 6", "Quay video TikTok tổng kết phiên", "19h đăng video dài YouTube", "19h30 thông báo live, 20h livestream", "20h40 Đăng Threads bài 4 hoặc 7"],
+  "tasks": ["Copy Nhận định vào Zalo", "8h Nhắn 1 khách đăng ký", "Trước 8h45 duyệt bài 1", "12h Đăng Threads bài 3", "16h45 Quay video TikTok tổng kết", "19h30 Thông báo live, 20h livestream tổng kết tuần", "20h40 Đăng Threads bài 4"],
   "lead": {"tong": 1, "moi": 0, "canNhan": 1},
   "note": ""
 }
